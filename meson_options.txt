@@ -1,0 +1,15 @@
+# provider_priority (design.md D7): the single decision point for the
+# GtkCssProvider priority used by src/glue/lc-provider.c. No other file may
+# name a priority constant. Empirically confirmed by the H0-b standalone
+# harness (slice 2, task 2.6, see docs/spike-findings.md): APPLICATION
+# already wins cleanly against the panel's real widget-level competing
+# rule under the system default theme, with no evidence that USER is
+# needed. Slice 1/2 do not consume this option yet; slice 3's
+# lc-provider.c is the first consumer.
+option(
+  'provider_priority',
+  type: 'combo',
+  choices: ['application', 'user'],
+  value: 'application',
+  description: 'GtkCssProvider priority: GTK_STYLE_PROVIDER_PRIORITY_APPLICATION or _USER (resolved empirically in H0-b, see docs/spike-findings.md)',
+)
