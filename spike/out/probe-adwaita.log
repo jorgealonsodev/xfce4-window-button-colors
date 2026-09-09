@@ -1,0 +1,54 @@
+xlc probe loaded in prgname=xfce4-panel
+gtk 3.24.41  theme=Adwaita
+
+Watching GtkWidget::map for launcher-* widgets.
+D4 asks whether the plugin object itself (named launcher-<id>) emits map,
+or only its inner children do. Order below is emission order.
+
+[map 001] name=launcher-arrow     type=GtkButton                    inner widget
+[map 002] name=launcher-5         type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 003] name=launcher-arrow     type=GtkButton                    inner widget
+[map 004] name=launcher-8         type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 005] name=launcher-arrow     type=GtkButton                    inner widget
+[map 006] name=launcher-20        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 007] name=launcher-arrow     type=GtkButton                    inner widget
+[map 008] name=launcher-15        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 009] name=launcher-arrow     type=GtkButton                    inner widget
+[map 010] name=launcher-13        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 011] name=launcher-arrow     type=GtkButton                    inner widget
+[map 012] name=launcher-17        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 013] name=launcher-arrow     type=GtkButton                    inner widget
+[map 014] name=launcher-10        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 015] name=launcher-arrow     type=GtkButton                    inner widget
+[map 016] name=launcher-18        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 017] name=launcher-arrow     type=GtkButton                    inner widget
+[map 018] name=launcher-9         type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 019] name=launcher-arrow     type=GtkButton                    inner widget
+[map 020] name=launcher-7         type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 021] name=launcher-arrow     type=GtkButton                    inner widget
+[map 022] name=launcher-35        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 023] name=launcher-arrow     type=GtkButton                    inner widget
+[map 024] name=launcher-36        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 025] name=launcher-arrow     type=GtkButton                    inner widget
+[map 026] name=launcher-31        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 027] name=launcher-arrow     type=GtkButton                    inner widget
+[map 028] name=launcher-32        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 029] name=launcher-arrow     type=GtkButton                    inner widget
+[map 030] name=launcher-33        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 031] name=launcher-arrow     type=GtkButton                    inner widget
+[map 032] name=launcher-11        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 033] name=launcher-arrow     type=GtkButton                    inner widget
+[map 034] name=launcher-34        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 035] name=launcher-arrow     type=GtkButton                    inner widget
+[map 036] name=launcher-12        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 037] name=launcher-arrow     type=GtkButton                    inner widget
+[map 038] name=launcher-19        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+[map 039] name=launcher-arrow     type=GtkButton                    inner widget
+[map 040] name=launcher-37        type=XfceLauncherPlugin           PLUGIN OBJECT (D4 assumption holds for this one)
+
+STAGE colour: applied to launcher-5 at APPLICATION (600), screen scope.
+  Take a screenshot NOW — this is the base (non-hover) state.
+
+STAGE hover: forced PRELIGHT on the launcher-arrow widget.
+  Take a screenshot NOW — this answers whether the base rule's
+  background-image: none also suppresses the theme image on :hover.

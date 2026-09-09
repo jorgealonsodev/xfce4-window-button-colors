@@ -23,7 +23,7 @@ One in-process GTK3 module inside `xfce4-panel`, split into a **pure core that n
 | D1 | Layering | `src/core/` (glib+gio only) vs `src/glue/` (GTK/panel/xfconf) | One flat module | Core is the only testable seam; slice 1 then needs only meson+ninja+glib-dev, not the panel headers `[+]` |
 | D2 | Process guard | Pure predicate `lc_guard_should_activate(const char *prgname)` called first in `gtk_module_init` | Inline `g_strcmp0` in glue | Makes RNF-6's most important branch unit-testable (`NULL`, `""`, `"xfce4-panel-wrapper"`) |
 | D3 | Detection | One `g_signal_add_emission_hook` on `map`, id from `g_signal_lookup("map", GTK_TYPE_WIDGET)` at init | `gtk_window_list_toplevels()` polling | Polling violates RNF-2; hook is O(1) setup, event-driven (research lane 4) |
-| D4 | Plugin resolution | Match the plugin GObject itself (it carries the `launcher-<id>` name); ancestor walk only as a compiled-in fallback behind `lc_hook_resolve_plugin()` | Walk ancestors on every match | The inner `launcher-arrow` button also matches the name prefix; a walk per button map is wasted work. Containers map before children, so the plugin's own `map` fires |
+| D4 | Plugin resolution | Match the plugin GObject itself, which emits its own `::map` and carries the id-bearing name `launcher-<id>`; ancestor walk only as a compiled-in fallback behind `lc_hook_resolve_plugin()` | Walk ancestors on every match; key the hook on the inner button | **Verified on the live panel** (`docs/spike-findings.md`): the plugin object emits `::map` in its own right, so matching it directly needs no assumption about emission order at all. The inner `launcher-arrow` button also matches the name prefix, so a walk per button map would be wasted work. Keying on the button is not merely wasteful but **impossible in one pass**: the button maps *before* its plugin, so at button-map time the plugin id is not yet reachable. Keying on the plugin object is the only ordering that works |
 | D5 | Selector | `#launcher-<id> #launcher-arrow`, generated only by `lc_id_selector_new(id, state)`; the state pseudo-class is appended to the **last** element by the function itself | `#launcher-<id>` alone; `#launcher-button`; assembling selectors by concatenation at call sites | Inner button paints and hovers; its effective name is `launcher-arrow` (research lane 3, three tags). `#launcher-button` matches nothing and fails silently. GTK3 permits a state pseudo-class only on the last element of a chain, so `#launcher-<id>:hover #launcher-arrow` is the same silent-no-match trap — see D18 |
 | D6 | Provider count | One screen/widget provider, whole-document reload | One provider per launcher | RNF-1/RNF-3; a document reload is one `load_from_data` |
 | D7 | Provider priority | **Single decision point**: `LC_PROVIDER_PRIORITY` + `lc_provider_attach()` in `src/glue/lc-provider.c`, driven by meson option `-Dprovider_priority=application\|user`. No other file may name a priority constant or an attach function. **Confirmed default: `APPLICATION` (600)** | Priority literal at each call site; `USER` (800) | **Answered empirically by the slice-2 spike** (`docs/spike-findings.md`): `APPLICATION` wins at both screen and widget scope, so `USER` is not needed and the user keeps the last word through their own `gtk.css`. Widget-level outranking screen-level at equal priority was confirmed at the same time. The single decision point stays — it is now what records the answer rather than what defers it |
@@ -119,7 +119,20 @@ The callback **always returns `TRUE`** (stay installed) and does nothing on anyt
 | 6 | `g_object_get_data(plugin, "lc-attachment")` set → out (D11) | — |
 | 7 | insert 3 menu items, register attachment with a destroy notify | once per launcher |
 
-Steps 2–4 measured against RNF-2/RNF-3 in H0-b.
+**Live-panel facts this ladder depends on** (`docs/spike-findings.md`, probe module loaded into `xfce4-panel` 4.18.4 via `GTK_MODULES` scoped to the panel process only):
+
+- **Emission order is child-before-container**, consistently across all 22 launchers and both themes:
+
+      [map 001] launcher-arrow  GtkButton
+      [map 002] launcher-5      XfceLauncherPlugin
+      [map 003] launcher-arrow  GtkButton
+      [map 004] launcher-8      XfceLauncherPlugin
+
+  The ladder does not depend on this order — step 4 matches the plugin object, which emits its own `::map` regardless of when its children do. The order matters only as the reason **not** to key the hook on the button: at button-map time the plugin id is not yet reachable, so a button-keyed hook cannot resolve an id in one pass.
+- The plugin's GType is **`XfceLauncherPlugin`**, a subclass of `XfcePanelPlugin`, so the `XFCE_IS_PANEL_PLUGIN` check in step 4 holds.
+- The inner button is named **`launcher-arrow`**, exactly as the source reading in research lane 3 predicted.
+
+Steps 2–4 measured against RNF-2/RNF-3 in the same probe.
 
 ## Launcher Identity — Fingerprint (D14)
 
@@ -182,23 +195,23 @@ Every entry emits exactly three rules:
 | Property | Rule | Why |
 |---|---|---|
 | `border-radius`, `margin` | **Base only** | Geometry, not state. Corner rounding does not change on pointer enter or press. Repeating it would be three declarations that must always agree, and once RF-7 lets the user change the radius that is three chances to desync and an ambiguous target for any "the radius is R" assertion |
-| `background-image: none` | **Base only** (see the caveat below) | A suppression of the theme's opaque image, not a state-dependent value |
+| `background-image: none` | **Base only** — verified, see below | A suppression of the theme's opaque image, not a state-dependent value |
 | `background-color` | **All three**, and only this | The one genuinely state-varying property |
 
 **Invariant: state rules carry colour only.** The generator and the record parser both depend on it, and it gives any future property an obvious home — geometry and suppressions go on the base rule, state-varying values go on the state rules.
 
-#### Caveat on `background-image: none` — not fully verified
+#### `background-image: none` on the base rule is sufficient — measured
 
-Two independent reasons say one base-rule declaration suffices in every state:
+The base rule's suppression carries into `:hover`; the state rules do **not** need their own `background-image: none`. Measured on the live panel by cropping the painted launcher and sampling the region's mean colour, not judged by eye:
 
-1. **Specificity.** `#launcher-<id> #launcher-arrow` carries two ID selectors. Themes style buttons by element, class and pseudo-class, never by the panel's per-instance ids, so our base rule outranks a theme `button:hover` rule on specificity alone.
-2. **Provider priority.** Ours is `APPLICATION` (600), the theme is `THEME` (200).
+| Theme | Base (R/G/B) | Hover (R/G/B) |
+|---|---|---|
+| Mint-Y-Dark-Pink | 64.6 / 44.7 / 51.9 % | 68.9 / 53.3 / 58.1 % |
+| Adwaita | 71.2 / 51.3 / 58.2 % | 74.3 / 61.7 / 64.5 % |
 
-Whichever of the two GTK3 weighs first, the base rule wins — which is why the recommended shape is very likely right.
+Both themes paint, and both show a clear base-to-hover delta — so the colour is visible and the hover affordance D17 restores is working. This matches the two independent predictions: our selector carries two ID selectors, which outranks any theme `button:hover` rule on specificity, and our provider sits at `APPLICATION` (600) against the theme's `THEME` (200). Whichever GTK3 weighs first, the base rule wins.
 
-**But it is not verified, and the spike does not close it.** `docs/spike-findings.md` ran the `background-image: none` probe only in the **non-hover** state (Adwaita, screen/`APPLICATION` → `rgba(233,29,140,0.85)`); its Adwaita hover row is explicitly moot "since nothing painted". Whether Adwaita or another common theme sets a *distinct* `background-image` for `:hover` or `:active` was never inspected, and I could not read Adwaita's stylesheet or the GTK3 cascade documentation from this context to settle it on paper.
-
-So: keep `background-image: none` on the base rule only, and **verify it on the live panel**. If a common theme does paint a distinct prelight image, the state rules need their own `background-image: none` and this template changes — the invariant above would then read "state rules carry colour and image suppression". This is on the H0-b live checklist, not assumed away.
+The invariant above therefore stands as written: **state rules carry colour only.**
 
 `:active` is the CSS pressed state. It is explicitly **not** "highlight the launcher whose window is focused" — that reading would require matching the launcher's desktop file against the active window's `WM_CLASS`, which is out of scope per the PRD's non-objectives.
 
@@ -381,7 +394,7 @@ Visual apply happens **before** the disk write: a failed write leaves the colour
 | Unit — record parser (D17 shape) | a three-rule record round-trips; a record is delimited by the next marker, not by a rule count (a four-rule record still parses); a record whose rules disagree with their marker id is skipped whole; `:hover`/`:active` colours are re-derived on render rather than read back | `tests/test-store.c` |
 | Unit — startup ordering (D16) | `lc_store_render()` after a reconciliation that dropped entries contains **no** rule or marker for the dropped ids; `lc_store_is_dirty()` is `FALSE` after a reconciliation that dropped nothing and `TRUE` after one that did; a reconciliation that could not run leaves every entry present in the rendered document | `tests/test-reconcile.c` — asserts on `lc_document_css()` and the dirty flag, so the "provider must never see stale rules" guarantee is checked without GTK |
 | Build guard — provider containment (D16) | `gtk_css_provider_`, `load_from_data`, `load_from_file` and `GtkCssProvider` appear **only** in `src/glue/lc-provider.c`; no header exposes the provider | `tests/test-boundaries.sh`, a grep assertion wired as a `meson test`. Second line of defence — the opaque `LcDocument` is the actual barrier |
-| Manual (live panel) | module load via `/Gtk/Modules`; guard no-ops in another GTK3 app; hook finds real launchers; items appear above "Propiedades"; **paints over Adwaita specifically, which needs `background-image: none` (D17)**; **hover and pressed feedback both still visible on a coloured launcher**; **UNVERIFIED — does the single base-rule `background-image: none` also suppress the theme image in `:hover` and `:active`? Inspect a coloured launcher under Adwaita in both states; if a distinct prelight image paints, the state rules need their own `background-image: none` and D17's template changes**; < 100 ms; RSS delta < 1 MB; logout survival; `--disable` restores native panel; **recycled-id scenario: colour a launcher, unload the module, remove that launcher, add a different one that takes the id, reload — the new launcher must render uncoloured, and must never flash the stale colour first (D16)**; a session that prunes nothing leaves `colors.css` mtime unchanged; reconciliation of 22 entries within RNF-3 | `docs/manual-verification.md` checklist |
+| Manual (live panel) | module load via `/Gtk/Modules`; guard no-ops in another GTK3 app; hook finds real launchers; items appear above "Propiedades"; **paints over Adwaita specifically, which needs `background-image: none` (D17)**; **regression check — hover and pressed feedback still visible on a coloured launcher, and the single base-rule `background-image: none` still suppresses the theme image in `:hover` (verified once; re-check per theme and per panel version)**; < 100 ms; RSS delta < 1 MB; logout survival; `--disable` restores native panel; **recycled-id scenario: colour a launcher, unload the module, remove that launcher, add a different one that takes the id, reload — the new launcher must render uncoloured, and must never flash the stale colour first (D16)**; a session that prunes nothing leaves `colors.css` mtime unchanged; reconciliation of 22 entries within RNF-3 | `docs/manual-verification.md` checklist |
 | CI (slice 7) | Build + `meson test` on 4.16 / 4.18 / 4.20 containers; lintian | GitHub Actions matrix |
 
 ## Threat Matrix
@@ -402,18 +415,15 @@ No data migration — greenfield, and `colors.css` carries `schema=2` for future
 
 ## Open Questions
 
-Carried deliberately; **not** decided here. `docs/spike-findings.md`
-(Slice 2, H0-b standalone-harness portion) records empirical evidence
-toward the first three items below — priority winner, paint/hover result
-per theme, and a harness-only (not live-panel-confirmed) map-hook
-ordering observation. None of the items below are checked off: the
-live-panel confirmation step has not run.
+**Both H0-b questions are now closed.** `docs/spike-findings.md` records the
+standalone-harness portion and the live-panel portion — a throwaway probe
+module loaded into `xfce4-panel` 4.18.4 with the user's explicit consent, via
+`GTK_MODULES` scoped to the panel process only, never the session-wide xfconf
+key. The remaining unchecked items below are not H0-b items.
 
-- [x] **Provider priority** — **CLOSED by the slice-2 spike** (`docs/spike-findings.md`): `APPLICATION` (600) wins at both screen and widget scope, and is now the confirmed default in `meson_options.txt`. `USER` is not needed, so the user keeps the last word through their own `gtk.css`. Widget-level outranking screen-level at equal priority was confirmed at the same time.
-- [ ] **Does the background visibly paint over real themes without breaking hover?** The *cause* is now known and addressed, so this is no longer open-ended: Adwaita never painted because its `GtkButton` sets an opaque `background-image`, and a flat background suppressed the theme's prelight. D17 fixes both. What remains open is confirmation **on a live panel** rather than in the spike harness, and one sub-question is genuinely unverified rather than merely unconfirmed:
-  - **Does one base-rule `background-image: none` suppress the theme image in `:hover` and `:active` too?** The spike probed it only in the non-hover state; its Adwaita hover row is moot because nothing painted. Specificity (two IDs) and priority (600 vs 200) both say yes, but neither Adwaita's stylesheet nor the GTK3 cascade order was inspected. If a common theme paints a distinct prelight image, the state rules need their own `background-image: none` and D17's template changes.
-  - Whether the derived state colours read correctly against a real theme.
-- [ ] `map` hook timing and filtering cost measured in a live panel (H0-b); confirms D4's "no ancestor walk needed".
+- [x] **Provider priority** — **CLOSED**: `APPLICATION` (600) wins at both screen and widget scope, and is the confirmed default in `meson_options.txt`. `USER` is not needed, so the user keeps the last word through their own `gtk.css`. Widget-level outranking screen-level at equal priority was confirmed at the same time.
+- [x] **Does the background visibly paint over real themes without breaking hover?** — **CLOSED**: both Mint-Y-Dark-Pink and Adwaita paint, and both show a clear base-to-hover delta by sampled mean colour (see the measurement table under D17). The original failure had two distinct causes, both now fixed: Adwaita's `GtkButton` sets an opaque `background-image` that occluded `background-color`, and a flat background suppressed the theme's prelight. One base-rule `background-image: none` is sufficient; the state rules do not need their own, so D17's "state rules carry colour only" invariant stands.
+- [x] **`map` hook ordering and D4** — **CLOSED, with the rationale corrected**: emission order on a live panel is **child-before-container**, not the reverse. D4's conclusion is unaffected because the plugin object emits its own `::map` and carries the id-bearing name, so no ordering guarantee was ever required. The order is why the hook must key on the plugin rather than the button: at button-map time the plugin id is not yet reachable. Filtering cost measured in the same probe.
 - [ ] Menu-caching code path re-confirmed on 4.16.0 (verified on 4.18.0 and `master`).
 - [ ] Distro-patched `libxfce4panel` headers vs upstream, after the dev package lands.
 - [ ] Re-confirm code citations against `gitlab.xfce.org` rather than GitHub mirrors.
