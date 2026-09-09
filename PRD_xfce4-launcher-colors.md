@@ -1,7 +1,9 @@
 # PRD — xfce4-launcher-colors
 
-**Versión:** 1.1 · **Fecha:** 2026-09-09 · **Estado:** Validado contra fuentes upstream · pendiente spike H0
+**Versión:** 1.2 · **Fecha:** 2026-09-09 · **Estado:** Validado contra fuentes upstream · spike H0 parcialmente ejecutado
 
+> **Cambios v1.2.** El spike H0 detectó dos fallos no previstos y obliga a corregir la plantilla CSS (§7.3): en Adwaita el fondo no pintaba con ninguna prioridad, y el color plano eliminaba la respuesta visual al pasar el ratón. Se añade el RF-12 y el hito H5 para resaltar el lanzador de la ventana enfocada, explícitamente fuera del v1.
+>
 > **Cambios v1.1.** Se corrigen tres puntos técnicos tras verificar el código fuente de `xfce4-panel` (etiquetas 4.16.0, 4.18.0 y `master`): el mecanismo de inserción en el menú (§7.3), el selector CSS del ejemplo (§7.3) y la fecha de migración a GTK4 (§11). Se reescribe §7.4 separando lo verificado de lo pendiente, con citas. Se reestima el Hito 0 (§12).
 
 ---
@@ -42,6 +44,7 @@ XFCE permite colocar varios lanzadores con el mismo icono en el panel, pero no o
 - Soporte para paneles que no sean xfce4-panel (LXQt, MATE…).
 - Cambiar el icono en sí, solo el fondo.
 - Soporte Wayland-específico (funciona igual, pero no se prueba activamente en v1).
+- Resaltar el lanzador de la ventana enfocada (RF-12). Aplazado al H5, no descartado.
 
 ## 4. Usuarios
 
@@ -63,6 +66,7 @@ XFCE permite colocar varios lanzadores con el mismo icono en el panel, pero no o
 | RF-9 | El color se conserva al mover el lanzador de posición o de panel (el id del plugin no cambia). | Must |
 | RF-10 | Comando CLI `xfce4-launcher-colors set <id> <#rrggbbaa>` / `unset <id>` / `list` para scripting y depuración. | Could |
 | RF-11 | Traducción: español e inglés en v1 (gettext), preparado para más idiomas. | Should |
+| RF-12 | Resaltar el lanzador cuya aplicación es la **ventana enfocada** en ese momento, al modo en que el plugin «botones de ventana» marca su botón activo. **Fuera del v1**: ver hito H5 y el riesgo de emparejamiento en §11. | Won't (v1) |
 
 ## 6. Requisitos no funcionales
 
@@ -283,6 +287,7 @@ No se usa `~/.config/autostart` porque no hay ningún proceso que arrancar: la �
 | El selector CSS no coincide y no se pinta nada, en silencio | Alto | Causa concreta: usar `#launcher-button`, que es el nombre que el panel asigna y luego sobrescribe. El nombre efectivo es `launcher-arrow` (§7.4). Documentarlo en el código y cubrirlo con un test de generación de CSS. |
 | Insertar el ítem de menú demasiado tarde y que no aparezca | Medio | El menú se construye una vez y se cachea; el ítem debe insertarse al detectar el lanzador, no al abrir el menú. No usar `menu_destroy()` para refrescar: libera también los ítems de otros módulos (§7.4). |
 | Distros con xfce4-panel < 4.16 | Bajo | No soportadas; el módulo lo detecta y avisa una vez. |
+| Emparejar la ventana enfocada con su lanzador (RF-12) resulta poco fiable | Alto, pero acotado al H5 | Ir del `WM_CLASS` de la ventana al `.desktop` del lanzador falla en muchas aplicaciones reales, y peor aún en las que lanzan procesos hijos: Electron, aplicaciones Java y terminales con perfiles — precisamente los casos de uso que motivan este proyecto. El H5 empieza por un spike que mide la fiabilidad del emparejamiento sobre las aplicaciones reales del usuario **antes** de construir nada. Si no es fiable, el H5 se descarta sin haber comprometido el MVP. |
 
 ## 12. Hitos
 
@@ -293,6 +298,7 @@ No se usa `~/.config/autostart` porque no hay ningún proceso que arrancar: la �
 | H2 — Autocarga y ajustes | RF-6, RF-7, RF-8, CLI. | 3–4 días |
 | H3 — Empaquetado | `.deb` (amd64/arm64), `tar.gz` + `install.sh`, PKGBUILD/spec, CI en GitHub Actions. | 3–4 días |
 | H4 — Pulido | i18n es/en, README con capturas, pruebas en Xubuntu 24.04/26.04, Mint XFCE, Debian 13, Arch, Fedora. | 3 días |
+| H5 — Ventana enfocada (RF-12, **post-v1**) | Spike de fiabilidad del emparejamiento `WM_CLASS` → `.desktop` sobre aplicaciones reales; solo si supera ese listón, integración de `libwnck` (ya presente en el sistema, el propio panel la usa) y estado CSS propio. El plugin tasklist resuelve esto con `wnck_screen_get_active_window()` y `gtk_toggle_button_set_active()`, que le da el estado `:checked`; un lanzador no tiene ningún equivalente porque no sabe nada de ventanas. | Spike 2 días + 1 semana si procede |
 
 ## 13. Criterios de aceptación
 
