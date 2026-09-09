@@ -10,3 +10,8 @@ spike/harness
 # Editor
 .vscode/
 .atl/
+spike/*.so
+
+# Full-desktop probe screenshots: they capture the whole screen, including
+# unrelated windows. Only the cropped panel strips are committed as evidence.
+spike/out/live-*.png
