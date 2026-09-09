@@ -1,0 +1,12 @@
+# Build output
+build/
+*.o
+*.a
+*.so
+
+# Compiled spike harness (source is tracked, the binary is not)
+spike/harness
+
+# Editor
+.vscode/
+.atl/
