@@ -9,27 +9,98 @@ launcher moves, and launcher removal — including the recycled-id case where
 
 ## Requirements
 
-### Requirement: colors.css Selector Schema (RF-4)
+### Requirement: Generated Rule Shape and Theme Override (RF-3, RF-4)
 
-The system MUST generate CSS rules using the descending selector
-`#launcher-<id> #launcher-arrow`, where `<id>` is the launcher's unique panel
-id, and MUST NOT generate rules against `#launcher-button`, which matches no
-widget at runtime.
+For every colored launcher, the system MUST generate exactly three CSS rules
+under the descending selector `#launcher-<id> #launcher-arrow`: a base rule,
+a `:hover` rule, and an `:active` rule. The base rule MUST set
+`background-image: none` before `background-color`, because Adwaita's
+`GtkButton` sets an opaque `background-image` that occludes
+`background-color` and would otherwise render nothing at all. The system
+MUST NOT generate rules against `#launcher-button`, which matches no widget
+at runtime.
+(Previously: a single rule was generated per entry, without
+`background-image: none`; slice-2 spike findings against Adwaita showed this
+insufficient — the color rendered nothing at any provider priority or scope.)
 
-#### Scenario: Generated rule uses the two-level selector
+#### Scenario: Base rule neutralizes the theme's opaque background-image
 
 - GIVEN a launcher with unique id 13 and color `rgba(233,30,140,0.85)`
-- WHEN the system generates its CSS rule
-- THEN the rule reads `#launcher-13 #launcher-arrow { background-color: rgba(233,30,140,0.85); ... }`
-- Unit-testable under Meson: yes — pure CSS-generation logic.
+- WHEN the system generates its base CSS rule for that launcher
+- THEN the rule includes `background-image: none` together with
+  `background-color: rgba(233,30,140,0.85)`
+- Unit-testable under Meson: yes — pure string-generation logic; a generator
+  that omits `background-image: none` MUST fail this scenario.
+
+#### Scenario: Three rules are generated per colored launcher
+
+- GIVEN a launcher with unique id 13 and an assigned color
+- WHEN the system generates its CSS output for that launcher
+- THEN exactly three rules exist: a base `#launcher-13 #launcher-arrow` rule,
+  a `#launcher-13 #launcher-arrow:hover` rule, and a
+  `#launcher-13 #launcher-arrow:active` rule
+- Unit-testable under Meson: yes.
 
 #### Scenario: A single-level selector is never produced
 
 - GIVEN the CSS generator is asked to target any launcher id
-- WHEN it produces a rule
-- THEN the rule always includes both the `#launcher-<id>` ancestor and the
+- WHEN it produces any of the three rules
+- THEN each rule always includes both the `#launcher-<id>` ancestor and the
   `#launcher-arrow` descendant, never `#launcher-<id>` or `#launcher-button` alone
 - Unit-testable under Meson: yes.
+
+### Requirement: Distinguishable Hover and Pressed Feedback (RF-3)
+
+A colored launcher MUST retain observable hover and pressed feedback: the
+`:hover` rule's `background-color` MUST differ from the base rule's
+`background-color`, and the `:active` rule's `background-color` MUST differ
+from both the base and the `:hover` `background-color`. The system MUST NOT
+emit an identical color for all three states. The specific color transform
+used to derive the hover and active colors is not specified here.
+
+#### Scenario: Hover and active colors differ from the base color
+
+- GIVEN a launcher has been assigned a base color
+- WHEN the system generates its hover and active rules
+- THEN the hover `background-color` differs from the base `background-color`,
+  and the active `background-color` differs from both the base and hover values
+- Unit-testable under Meson: yes — pure comparison of generated color values.
+
+#### Scenario: Identical colors across all three states is a failing case
+
+- GIVEN a color generator produces the same `background-color` for the base,
+  `:hover`, and `:active` rules of a launcher
+- WHEN this output is checked against the requirement
+- THEN the check fails, because indistinguishable states are non-conformant
+- Unit-testable under Meson: yes — this is the regression-guard scenario for
+  an implementation that reuses the base color unchanged for all three states.
+
+### Requirement: Pseudo-Class Placement on the Selector Chain (RF-3, RF-4)
+
+Every state-specific rule (`:hover`, `:active`) MUST attach its pseudo-class
+to the last element of the selector chain — the descendant, e.g.
+`#launcher-<id> #launcher-arrow:hover` — and MUST NOT attach it to the
+ancestor, e.g. `#launcher-<id>:hover #launcher-arrow`. GTK3 resolves a
+pseudo-class against the element it is attached to; attaching it to the
+ancestor produces a selector that silently matches nothing, the same failure
+shape as the `#launcher-button` prohibition above.
+
+#### Scenario: Pseudo-class is attached to the descendant
+
+- GIVEN the system generates a `:hover` rule for launcher id 13
+- WHEN the selector is inspected
+- THEN it reads `#launcher-13 #launcher-arrow:hover`, with the pseudo-class
+  attached to `#launcher-arrow`
+- Unit-testable under Meson: yes.
+
+#### Scenario: Attaching the pseudo-class to the ancestor is never produced
+
+- GIVEN the system generates any state-specific rule
+- WHEN the selector is inspected
+- THEN it never reads `#launcher-<id>:hover #launcher-arrow`, or any other
+  form attaching the pseudo-class to the ancestor
+- Unit-testable under Meson: yes — a generator producing this form MUST fail
+  this scenario, mirroring the existing `#launcher-button` prohibition.
 
 ### Requirement: Desktop-File Fingerprint Binding (RF-4, RF-8)
 
@@ -37,15 +108,16 @@ The system MUST compute a fingerprint from a launcher's desktop-file list
 (the panel's `items` property for that plugin instance) and MUST store this
 fingerprint alongside the launcher id in every `colors.css` entry, as a
 comment marker in the form `/* id=<id> fp=<fingerprint> */` immediately
-preceding that entry's CSS rule. The system MUST recompute and rewrite this
-marker every time a color is set for that launcher.
+preceding that entry's rule triplet (base, `:hover`, `:active`). The system
+MUST recompute and rewrite this marker every time a color is set for that
+launcher.
 
-#### Scenario: Fingerprint marker is written with the color rule
+#### Scenario: Fingerprint marker is written immediately before the rule triplet
 
 - GIVEN a launcher with id 12 and a given desktop-file list
 - WHEN the user assigns a color to it
 - THEN `colors.css` contains a `/* id=12 fp=<fingerprint> */` marker immediately
-  followed by the `#launcher-12 #launcher-arrow` rule
+  followed by the base, `:hover`, and `:active` rules for `#launcher-12 #launcher-arrow`
 - Unit-testable under Meson: yes — fingerprint computation and write logic, with the desktop-file list injected as input.
 
 #### Scenario: Fingerprint is rewritten when the desktop-file list has changed
