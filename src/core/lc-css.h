@@ -30,16 +30,33 @@ typedef struct
   gint margin;
 } LcStyle;
 
-/* Renders one full CSS rule block:
+/* Renders the three-rule state template for one colored launcher
+ * (design.md D17/D19):
  *
  *   <selector> {
+ *     background-image: none;
  *     background-color: <css rgba()>;
  *     border-radius: <style->corner_radius>px;
  *     margin: <style->margin>px;
  *   }
+ *   <selector>:hover {
+ *     background-color: <css rgba() of lc_color_derive_state(color, LC_STATE_HOVER)>;
+ *   }
+ *   <selector>:active {
+ *     background-color: <css rgba() of lc_color_derive_state(color, LC_STATE_ACTIVE)>;
+ *   }
  *
- * followed by a trailing newline. selector, color and style must all be
- * non-NULL. Caller owns the returned string (g_free). */
+ * `background-image: none`, `border-radius` and `margin` are geometry and
+ * theme-image suppression: they appear on the base rule only, exactly once.
+ * The `:hover` and `:active` rules carry `background-color` and nothing
+ * else, and that color is always derived at render time via
+ * lc_color_derive_state() — it is never stored or read back from `color`.
+ * The pseudo-class is appended directly to `selector`, so it always lands
+ * on the trailing selector element (`<selector>:hover`, never
+ * `<ancestor>:hover <descendant>`), which is the only form GTK3 resolves.
+ *
+ * selector, color and style must all be non-NULL. Caller owns the returned
+ * string (g_free). */
 gchar *lc_css_rule_new (const gchar *selector, const LcColor *color, const LcStyle *style);
 
 /* Concatenates already-rendered rule fragments (e.g. from lc_css_rule_new())
