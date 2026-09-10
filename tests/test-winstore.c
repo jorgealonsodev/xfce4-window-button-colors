@@ -511,6 +511,86 @@ test_winstore_render_alpha_is_locale_independent (void)
   lc_winstore_free (store);
 }
 
+/* ---- xids: enumeration (D7) ------------------------------------------
+ *
+ * lc_winstore_xids() is the accessor the colour-list view (Phase 6/7)
+ * needs and lc-winstore.h did not previously expose: `size`, `has`, and
+ * `get(xid)` cannot enumerate. These tests pin its three contractual
+ * properties: never NULL, empty-store shape, stable order, and that its
+ * output type is directly usable as lc_winstore_reconcile()'s
+ * live-snapshot input without any conversion in between.
+ */
+
+static void
+test_winstore_xids_of_empty_store_returns_empty_array (void)
+{
+  LcWinStore *store = lc_winstore_new ();
+  gsize out_n = 12345; /* sentinel: proves the function actually wrote it */
+  gulong *xids = lc_winstore_xids (store, &out_n);
+
+  g_assert_nonnull (xids); /* never NULL, even for an empty store */
+  g_assert_cmpuint (out_n, ==, 0);
+
+  g_free (xids);
+  lc_winstore_free (store);
+}
+
+static void
+test_winstore_xids_returns_stable_insertion_order (void)
+{
+  LcWinStore *store = lc_winstore_new ();
+  LcColor color = { 1, 2, 3, 4 };
+  gsize out_n = 0;
+  gulong *xids;
+
+  /* Inserted out of numeric order on purpose: a correct implementation
+   * must reproduce insertion order, not sort or otherwise reorder. */
+  lc_winstore_set (store, SAMPLE_XID_B, &color);
+  lc_winstore_set (store, SAMPLE_XID_A, &color);
+  lc_winstore_set (store, SAMPLE_XID_C, &color);
+
+  xids = lc_winstore_xids (store, &out_n);
+
+  g_assert_nonnull (xids);
+  g_assert_cmpuint (out_n, ==, 3);
+  g_assert_cmpuint (xids[0], ==, SAMPLE_XID_B);
+  g_assert_cmpuint (xids[1], ==, SAMPLE_XID_A);
+  g_assert_cmpuint (xids[2], ==, SAMPLE_XID_C);
+
+  g_free (xids);
+  lc_winstore_free (store);
+}
+
+static void
+test_winstore_xids_feeds_reconcile_unchanged (void)
+{
+  /* The whole point of this accessor's signature (gulong * / gsize, the
+   * same shape lc_winstore_reconcile() already takes) is that its
+   * output can be handed straight to reconcile() with no conversion.
+   * Enumerate every stored xid, then reconcile the SAME store against
+   * that exact snapshot: since every entry is, by construction, present
+   * in its own enumeration, nothing may be dropped. */
+  LcWinStore *store = lc_winstore_new ();
+  LcColor color = { 5, 6, 7, 8 };
+  gsize n = 0;
+  gulong *xids;
+  guint pruned;
+
+  lc_winstore_set (store, SAMPLE_XID_A, &color);
+  lc_winstore_set (store, SAMPLE_XID_B, &color);
+
+  xids = lc_winstore_xids (store, &n);
+  pruned = lc_winstore_reconcile (store, TRUE, xids, n);
+
+  g_assert_cmpuint (pruned, ==, 0);
+  g_assert_cmpuint (lc_winstore_size (store), ==, 2);
+  g_assert_true (lc_winstore_has (store, SAMPLE_XID_A));
+  g_assert_true (lc_winstore_has (store, SAMPLE_XID_B));
+
+  g_free (xids);
+  lc_winstore_free (store);
+}
+
 /* ---- reconcile: the fail-safe truth table --------------------------- */
 
 static void
@@ -707,6 +787,10 @@ main (int argc, char **argv)
   g_test_add_func ("/winstore/render-reproduces-marker-class-and-declarations", test_winstore_render_reproduces_marker_class_and_declarations);
   g_test_add_func ("/winstore/render-of-empty-store-has-no-entries", test_winstore_render_of_empty_store_has_no_entries);
   g_test_add_func ("/winstore/render-alpha-is-locale-independent", test_winstore_render_alpha_is_locale_independent);
+
+  g_test_add_func ("/winstore/xids-of-empty-store-returns-empty-array", test_winstore_xids_of_empty_store_returns_empty_array);
+  g_test_add_func ("/winstore/xids-returns-stable-insertion-order", test_winstore_xids_returns_stable_insertion_order);
+  g_test_add_func ("/winstore/xids-feeds-reconcile-unchanged", test_winstore_xids_feeds_reconcile_unchanged);
 
   g_test_add_func ("/winstore/reconcile-keeps-everything-when-live-list-not-obtained", test_winstore_reconcile_keeps_everything_when_live_list_not_obtained);
   g_test_add_func ("/winstore/reconcile-drops-entries-confirmed-absent", test_winstore_reconcile_drops_entries_confirmed_absent);

@@ -107,6 +107,18 @@ gboolean lc_winstore_get (const LcWinStore *store, gulong xid, LcColor *out);
 /* Number of entries currently held by store. store must be non-NULL. */
 guint lc_winstore_size (const LcWinStore *store);
 
+/* Newly allocated array of every stored xid, in the store's stable
+ * order (design D7). Sets *out_n. Never NULL; returns an empty array
+ * for an empty store — callers must check *out_n, not the pointer, to
+ * detect emptiness. Purely additive: introduced because lc-winstore.h's
+ * existing API (size/has/get) has no way to enumerate, which the
+ * colour-list view needs. The returned array's element type and *out_n
+ * are exactly lc_winstore_reconcile()'s live_xids/n_live parameter
+ * shape, so its output feeds that function directly with no
+ * conversion. store must be non-NULL; out_n must be non-NULL. Caller
+ * owns the returned array (g_free). */
+gulong *lc_winstore_xids (const LcWinStore *store, gsize *out_n);
+
 /* Pure prune against a caller-supplied live-XID snapshot (design: fail
  * SAFE, which for this path means the OPPOSITE direction from the
  * launcher-era lc_store_reconcile_entry() sketch — read this carefully,
