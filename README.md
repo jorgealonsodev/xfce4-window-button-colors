@@ -2,9 +2,9 @@
 
 Four VS Code windows in the XFCE panel look like four identical icons. This gives each one its own background colour, so you can find the right window at a glance instead of hovering over each button to read its title.
 
-![Panel window buttons, three of them painted orange while the rest keep the theme's default](docs/images/panel-painted.png)
+![Two VS Code window buttons in the XFCE panel, one tagged orange and one tagged pink, beside other buttons left with the theme's default background](docs/images/panel-painted.png)
 
-*Three browser windows tagged orange. Everything else on the panel is untouched.*
+*Two windows of the same editor, told apart at a glance. Everything else on the panel is untouched.*
 
 It is a GTK 3 module loaded in-process by `xfce4-panel`. It adds a **Background colour** item to the right-click menu of any window button, and paints that button's background. Nothing else on the panel is touched.
 

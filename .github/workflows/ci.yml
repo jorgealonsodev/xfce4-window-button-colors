@@ -66,7 +66,15 @@ jobs:
       - name: Lint the package
         run: lintian ../*.deb || true
 
+      # dpkg-buildpackage writes to the parent directory, and
+      # upload-artifact rejects any path containing "..", so move the
+      # results inside the workspace first.
+      - name: Collect the package
+        run: |
+          mkdir -p dist
+          mv ../*.deb dist/
+
       - uses: actions/upload-artifact@v4
         with:
           name: deb
-          path: ../*.deb
+          path: dist/*.deb
