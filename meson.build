@@ -116,6 +116,7 @@ lc_settings_sources = files(
   'src/settings/main.c',
   'src/settings/lc-autoload-xfconf.c',
   'src/settings/lc-settings-ui.c',
+  'src/settings/lc-winlist-wnck.c',
 )
 
 lc_settings_c_args = [
