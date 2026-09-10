@@ -102,16 +102,16 @@ function that does not split cleanly.
 
 ## Phase 4 — Slice 4: Shell and packaging
 
-- [ ] 4.1 Create `src/settings/main.c` — `GtkApplication`, window bootstrap, gettext domain binding.
-- [ ] 4.2 Create `src/settings/lc-autoload-xfconf.c` — the sole `LcAutoloadBackend` implementation against the `xsettings` channel's `/Gtk/Modules` key.
-- [ ] 4.3 Edit `meson.build` — `xfconf_dep = dependency('libxfconf-0')`; `executable('xfce4-window-button-colors-settings', ..., dependencies: [lc_core_dep, gtk3_dep, wnck_dep, xfconf_dep])`; `i18n.merge_file()` for the `.desktop`.
-- [ ] 4.4 Create `data/xfce4-window-button-colors-settings.desktop.in` — `Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;`, `OnlyShowIn=XFCE;`.
-- [ ] 4.5 Edit `debian/control` — add `libxfconf-0-dev` to `Build-Depends` (D6). No `Depends` edit; runtime `libxfconf-0-3` arrives via `${shlibs:Depends}`.
-- [ ] 4.6 Edit `openspec/config.yaml` (line 30 area) — correct `toolchain_present`, dropping the stale `libxfce4panel-2.0-dev`/`libxfce4util-dev` entries `meson.build` does not reference (D6).
-- [ ] 4.7 Verify only, no edit needed — `.github/workflows/ci.yml` (read-only) and `.github/workflows/release.yml` (read-only) already list `libxfconf-0-dev` in their apt install steps.
-- [ ] 4.8 Edit `po/POTFILES.in` — add `src/settings/main.c`, `src/settings/lc-settings-ui.c`, plus a `[type: gettext/desktop]` line for the `.desktop.in`.
-- [ ] 4.9 Bump version to `0.2.0` in `meson.build` (`project()` `version:`) and add a matching new entry to `debian/changelog`, same format as the existing `0.1.0` entry.
-- [ ] 4.10 Verify: `meson test -C build`; `meson compile -C build` builds the new binary; `nm -u build/liblc-core.a` still clean — only `src/settings/` links xfconf/gtk/wnck.
+- [x] 4.1 Create `src/settings/main.c` — `GtkApplication`, window bootstrap, gettext domain binding.
+- [x] 4.2 Create `src/settings/lc-autoload-xfconf.c` — the sole `LcAutoloadBackend` implementation against the `xsettings` channel's `/Gtk/Modules` key.
+- [x] 4.3 Edit `meson.build` — `xfconf_dep = dependency('libxfconf-0')`; `executable('xfce4-window-button-colors-settings', ..., dependencies: [lc_core_dep, gtk3_dep, wnck_dep, xfconf_dep])`; `i18n.merge_file()` for the `.desktop`.
+- [x] 4.4 Create `data/xfce4-window-button-colors-settings.desktop.in` — `Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;`, `OnlyShowIn=XFCE;`.
+- [x] 4.5 Edit `debian/control` — add `libxfconf-0-dev` to `Build-Depends` (D6). No `Depends` edit; runtime `libxfconf-0-3` arrives via `${shlibs:Depends}`.
+- [x] 4.6 Edit `openspec/config.yaml` (line 30 area) — correct `toolchain_present`, dropping the stale `libxfce4panel-2.0-dev`/`libxfce4util-dev` entries `meson.build` does not reference (D6).
+- [x] 4.7 Verify only, no edit needed — `.github/workflows/ci.yml` (read-only) and `.github/workflows/release.yml` (read-only) already list `libxfconf-0-dev` in their apt install steps.
+- [x] 4.8 Edit `po/POTFILES.in` — add `src/settings/main.c`, `src/settings/lc-settings-ui.c`, plus a `[type: gettext/desktop]` line for the `.desktop.in`.
+- [x] 4.9 Bump version to `0.2.0` in `meson.build` (`project()` `version:`) and add a matching new entry to `debian/changelog`, same format as the existing `0.1.0` entry.
+- [x] 4.10 Verify: `meson test -C build`; `meson compile -C build` builds the new binary; `nm -u build/liblc-core.a` still clean — only `src/settings/` links xfconf/gtk/wnck.
 
 ## Phase 5 — Slice 5: Toggle and restart UI
 
