@@ -15,3 +15,10 @@ spike/*.so
 # Full-desktop probe screenshots: they capture the whole screen, including
 # unrelated windows. Only the cropped panel strips are committed as evidence.
 spike/out/live-*.png
+
+# Debian build artefacts
+debian/.debhelper/
+debian/files
+debian/*.substvars
+debian/xfce4-launcher-colors/
+obj-*/
