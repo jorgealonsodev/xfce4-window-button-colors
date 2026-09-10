@@ -7,22 +7,22 @@
  * Phase 4 built the bare shell; Phase 5 (design.md D1/D4/D5) added the
  * xfconf channel this process owns for its whole lifetime and embedded
  * lc-settings-ui.c's toggle row and restart action into the window.
- * Phase 7 (design.md D2/D7/D8) adds the LcWinStore this process loads
- * once at startup, feeding lc-settings-ui.c's colour list.
  *
- * Links gtk, gio, xfconf and glib — this is src/settings/, where GTK,
- * xfconf and libwnck are allowed to appear (design.md "Technical
- * Approach"; src/core/ must never see any of them, which CI enforces
- * by scanning liblc-core.a for undefined gtk_/xfconf_/wnck_ symbols).
+ * The stored-colour management section that Phase 7 added here has
+ * since been removed (see lc-settings-ui.h) after it caused real,
+ * unreproducible data loss; this process no longer needs an LcWinStore.
+ *
+ * Links gtk, gio and xfconf — this is src/settings/, where GTK and
+ * xfconf are allowed to appear (design.md "Technical Approach");
+ * src/core/ must never see either, which CI enforces by scanning
+ * liblc-core.a for undefined gtk_/xfconf_/wnck_ symbols.
  */
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
 #include <xfconf/xfconf.h>
 
 #include "lc-autoload-xfconf.h"
-#include "lc-paths.h"
 #include "lc-settings-ui.h"
-#include "lc-winstore.h"
 
 /* Reverse-DNS GApplication id. Does not need to match any D-Bus service
  * this project ships today — GtkApplication requires a well-formed id
@@ -32,13 +32,10 @@
 /* Bundles everything "activate" needs beyond the GtkApplication itself.
  * Owned by main() for the whole process lifetime (stack-allocated there,
  * alive for the full g_application_run() call) — lc-settings-ui.c only
- * ever borrows `channel`/`store`/`colors_path` from this, exactly as its
- * own header documents. */
+ * ever borrows `channel` from this, exactly as its own header documents. */
 typedef struct
 {
   XfconfChannel *channel;
-  LcWinStore    *store;
-  gchar         *colors_path; /* may be NULL — see lc_paths_colors_css() */
 } LcSettingsAppContext;
 
 static void
@@ -50,13 +47,19 @@ activate (GtkApplication *app, gpointer user_data)
 
   window = gtk_application_window_new (app);
   gtk_window_set_title (GTK_WINDOW (window), _("Window Button Colors"));
-  gtk_window_set_default_size (GTK_WINDOW (window), 480, 360);
+  /* No fixed default size: the window asks GTK for whatever its content
+   * needs and no more. A hardcoded 480x360 was sized for the stored-colour
+   * list that used to sit below the restart action; with that section
+   * withdrawn it left half the window empty. A width request keeps the
+   * hint label from wrapping into a tall, narrow column, while the height
+   * stays free to follow the content. */
+  gtk_widget_set_size_request (window, 420, -1);
+  gtk_window_set_resizable (GTK_WINDOW (window), FALSE);
 
   /* lc-settings-ui.c: toggle row bound to lc_autoload_is_enabled()/
-   * lc_autoload_set_enabled() via the xfconf backend, the separate
-   * restart action (D1/D4/D5), and the stored-colour list joined
-   * against a live wnck snapshot (D2/D7/D8). */
-  ui = lc_settings_ui_new (ctx->channel, ctx->store, ctx->colors_path);
+   * lc_autoload_set_enabled() via the xfconf backend, and the separate
+   * restart action (D1/D4/D5). */
+  ui = lc_settings_ui_new (ctx->channel);
   gtk_container_add (GTK_CONTAINER (window), ui);
 
   gtk_widget_show_all (window);
@@ -66,7 +69,7 @@ int
 main (int argc, char **argv)
 {
   GtkApplication *app;
-  LcSettingsAppContext ctx = { NULL, NULL, NULL };
+  LcSettingsAppContext ctx = { NULL };
   GError *error = NULL;
   int status;
 
@@ -91,17 +94,6 @@ main (int argc, char **argv)
 
   ctx.channel = xfconf_channel_get (LC_AUTOLOAD_XFCONF_CHANNEL);
 
-  /* lc_paths_colors_css() returns NULL (with its own one g_warning) only
-   * when $HOME is unset or empty — lc_winstore_load(NULL) degrades to a
-   * genuinely empty store rather than failing outward (see lc-winstore.h),
-   * so the window still opens and is usable
-   * (settings-app-shell "Launch while module is disabled"/"...enabled"
-   * both require the window to open regardless); ctx.colors_path simply
-   * stays NULL and every colour-list mutation becomes in-memory-only for
-   * this run (see lc-settings-ui.h). */
-  ctx.colors_path = lc_paths_colors_css ();
-  ctx.store = lc_winstore_load (ctx.colors_path);
-
   /* G_APPLICATION_DEFAULT_FLAGS replaces G_APPLICATION_FLAGS_NONE (same
    * value) starting glib 2.74; glib_dep's declared floor in meson.build
    * is 2.56, where the new name does not exist yet, so pick whichever
@@ -118,8 +110,6 @@ main (int argc, char **argv)
   status = g_application_run (G_APPLICATION (app), argc, argv);
 
   g_object_unref (app);
-  lc_winstore_free (ctx.store);
-  g_free (ctx.colors_path);
 
   /* Deliberately NOT g_object_unref (ctx.channel) here: unlike
    * xfconf_channel_new(), xfconf_channel_get() (used above) is

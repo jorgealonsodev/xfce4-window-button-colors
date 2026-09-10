@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: xfce4-window-button-colors\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-10 20:06+0200\n"
+"POT-Creation-Date: 2026-09-10 21:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -74,79 +74,56 @@ msgstr ""
 msgid "Pick a colour from the screen"
 msgstr ""
 
-#: src/settings/main.c:52 data/xfce4-window-button-colors-settings.desktop.in:4
+#: src/settings/main.c:49 data/xfce4-window-button-colors-settings.desktop.in:4
 msgid "Window Button Colors"
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:151
+#: src/settings/lc-settings-ui.c:139
 msgid "Could not read the module autoload setting."
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:158
+#: src/settings/lc-settings-ui.c:146
 msgid "The /Gtk/Modules setting has an unexpected type and was left untouched."
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:165
+#: src/settings/lc-settings-ui.c:153
 msgid "Could not write the module autoload setting."
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:221
+#: src/settings/lc-settings-ui.c:209
 #, c-format
 msgid "Could not restart the panel: %s"
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:259
+#: src/settings/lc-settings-ui.c:247
 msgid "Restart the panel now?"
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:266
+#: src/settings/lc-settings-ui.c:254
 msgid ""
 "The panel will briefly disappear and come back. If it does not come back, "
 "recover from a TTY with: xfconf-query -c xsettings -p /Gtk/Modules -r, then "
 "log in again."
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:269
+#: src/settings/lc-settings-ui.c:257
 msgid "_Restart"
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:315
-msgid "(untitled window)"
-msgstr ""
-
-#: src/settings/lc-settings-ui.c:316
-msgid "Remove"
-msgstr ""
-
-#: src/settings/lc-settings-ui.c:490
+#: src/settings/lc-settings-ui.c:304
 msgid "Enable window button colours"
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:502
+#: src/settings/lc-settings-ui.c:316
 msgid ""
 "Configuration changed since this window opened — restart the panel to apply "
 "it."
 msgstr ""
 
-#: src/settings/lc-settings-ui.c:507
+#: src/settings/lc-settings-ui.c:321
 msgid "_Restart Panel"
 msgstr ""
 
-#. ---- colour list (Phase 7, design D2/D8) ---------------------------
-#: src/settings/lc-settings-ui.c:512
-msgid "Stored window colours"
-msgstr ""
-
-#: src/settings/lc-settings-ui.c:524
-msgid "The window list is currently unavailable — nothing was changed."
-msgstr ""
-
-#: src/settings/lc-settings-ui.c:529
-msgid "Clean Up _Orphaned Entries"
-msgstr ""
-
 #: data/xfce4-window-button-colors-settings.desktop.in:5
-msgid ""
-"Enable or disable per-window tasklist button colours and manage stored "
-"colours"
+msgid "Enable or disable per-window tasklist button colours"
 msgstr ""
