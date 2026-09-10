@@ -1,17 +1,17 @@
 /* lc-css.h — CSS rule and rule-set fragment rendering. Links glib only.
  *
- * IMPORTANT — scope boundary (design.md D16):
+ * IMPORTANT — scope boundary:
  * This module renders plain CSS text fragments ONLY. It has nothing to do
  * with the opaque `LcDocument` type, which is a distinct type constructed
- * exclusively by `lc_store_render()` (src/core/lc-store.c, a later slice).
+ * exclusively by `lc_winstore_render()` (src/core/lc-winstore.c).
  * `LcDocument`'s entire reason to exist is that it has no
  * `_new_from_string()`/`_from_file()` constructor, so the CSS provider
  * (src/glue/lc-provider.c) cannot be handed anything but a rendered,
  * reconciled store. Nothing in this file may be used, wrapped, or renamed
  * to produce an `LcDocument` — doing so would quietly reopen the exact
- * bypass D16 exists to close. If a future change needs to feed the
- * provider, it goes through `lc_store_render()`, never through
- * `lc_css_render_rules()`.
+ * bypass that constructor discipline exists to close. If a future change
+ * needs to feed the provider, it goes through `lc_winstore_render()`,
+ * never through `lc_css_render_rules()`.
  */
 #ifndef LC_CSS_H
 #define LC_CSS_H

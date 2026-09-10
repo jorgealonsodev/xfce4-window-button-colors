@@ -1,0 +1,70 @@
+# Spanish translations for xfce4-window-button-colors.
+# Copyright (C) 2026 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the xfce4-window-button-colors package.
+# Jorge Alonso <desarrollos@enfoquestic.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: xfce4-window-button-colors 0.1.0\n"
+"Report-Msgid-Bugs-To: desarrollos@enfoquestic.com\n"
+"POT-Creation-Date: 2026-09-10 16:51+0200\n"
+"PO-Revision-Date: 2026-09-10 16:51+0200\n"
+"Last-Translator: Jorge Alonso <desarrollos@enfoquestic.com>\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/glue/lc-menu.c:33
+msgid "Red"
+msgstr "Rojo"
+
+#: src/glue/lc-menu.c:34
+msgid "Orange"
+msgstr "Naranja"
+
+#: src/glue/lc-menu.c:35
+msgid "Yellow"
+msgstr "Amarillo"
+
+#: src/glue/lc-menu.c:36
+msgid "Green"
+msgstr "Verde"
+
+#: src/glue/lc-menu.c:37
+msgid "Turquoise"
+msgstr "Turquesa"
+
+#: src/glue/lc-menu.c:38
+msgid "Blue"
+msgstr "Azul"
+
+#: src/glue/lc-menu.c:39
+msgid "Violet"
+msgstr "Violeta"
+
+#: src/glue/lc-menu.c:40
+msgid "Pink"
+msgstr "Rosa"
+
+#: src/glue/lc-menu.c:193 src/glue/lc-dialogs.c:339
+msgid "No colour"
+msgstr "Sin color"
+
+#: src/glue/lc-menu.c:233
+msgid "Custom…"
+msgstr "Personalizado…"
+
+#: src/glue/lc-menu.c:252 src/glue/lc-dialogs.c:316
+msgid "Background colour"
+msgstr "Color de fondo"
+
+#: src/glue/lc-dialogs.c:127
+msgid "Eyedropper"
+msgstr "Cuentagotas"
+
+#: src/glue/lc-dialogs.c:131
+msgid "Pick a colour from the screen"
+msgstr "Elegir un color de la pantalla"

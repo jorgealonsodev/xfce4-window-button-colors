@@ -1,5 +1,6 @@
-# Each test binary links lc_core only (design.md: "tests/ linking lc_core
-# only") — no GTK, no panel, no xfconf dependency reaches this directory.
+# Each test binary links lc_core only ("tests/ linking lc_core only") —
+# no GTK, no panel, no xfconf, no libwnck dependency reaches this
+# directory.
 
 test_guard = executable(
   'test-guard',
@@ -7,13 +8,6 @@ test_guard = executable(
   dependencies: [lc_core_dep],
 )
 test('guard', test_guard)
-
-test_id = executable(
-  'test-id',
-  'test-id.c',
-  dependencies: [lc_core_dep],
-)
-test('id', test_id)
 
 test_color = executable(
   'test-color',
@@ -36,9 +30,16 @@ test_paths = executable(
 )
 test('paths', test_paths)
 
-test_store_load = executable(
-  'test-store-load',
-  'test-store-load.c',
+test_winid = executable(
+  'test-winid',
+  'test-winid.c',
   dependencies: [lc_core_dep],
 )
-test('store-load', test_store_load)
+test('winid', test_winid)
+
+test_winstore = executable(
+  'test-winstore',
+  'test-winstore.c',
+  dependencies: [lc_core_dep],
+)
+test('winstore', test_winstore)
