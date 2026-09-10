@@ -14,7 +14,7 @@ It is a GTK 3 module loaded in-process by `xfce4-panel`. It adds a **Background 
 
 1. Install the package:
    ```sh
-   sudo dpkg -i xfce4-window-button-colors_0.2.0_amd64.deb
+   sudo dpkg -i xfce4-window-button-colors_0.2.2_amd64.deb
    sudo apt-get -f install     # pulls in any missing dependency
    ```
 2. Open **Settings Manager → Window Button Colors** (or run `xfce4-window-button-colors-settings`), turn on **Enable window button colours**, then click **Restart Panel**.
@@ -56,10 +56,13 @@ Rules of the shape *"windows of app X whose title contains Y always get colour Z
 
 | Item | Path |
 |------|------|
-| Stored colours | `~/.config/xfce4-window-button-colors/` |
+| Stored colours | `~/.config/xfce4-window-button-colors/colors.css` |
 | Installed module | `/usr/lib/<triplet>/gtk-3.0/modules/libxfce4-window-button-colors.so` |
+| Settings application | `/usr/bin/xfce4-window-button-colors-settings` |
 
-The stored file is generated. Editing it by hand is not expected to be useful, but a truncated or malformed one will never cost you your colours: it degrades to what can still be read, with a single warning.
+The stored file is generated, and a truncated or malformed one will never cost you your colours: it degrades to what can still be read, with a single warning.
+
+**Entries for closed windows are not cleaned up automatically.** A colour is bound to a window id, so when that window closes its entry stays behind. Such entries are inert — they paint nothing — and each is only a few lines, so the file stays small. There is no button to clear them: the one that did could delete colours whose windows were still open, so it was withdrawn in v0.2.2. Delete them by hand if you want to; each entry is a `/* xid=… */` comment followed by its rules.
 
 ## Enabling and disabling
 
