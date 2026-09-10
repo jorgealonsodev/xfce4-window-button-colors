@@ -57,3 +57,10 @@ test_autoload = executable(
   dependencies: [lc_core_dep],
 )
 test('autoload', test_autoload)
+
+test_winlist = executable(
+  'test-winlist',
+  'test-winlist.c',
+  dependencies: [lc_core_dep],
+)
+test('winlist', test_winlist)

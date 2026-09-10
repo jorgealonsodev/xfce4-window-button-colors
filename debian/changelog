@@ -1,3 +1,17 @@
+xfce4-window-button-colors (0.2.0) unstable; urgency=medium
+
+  * Adds the xfce4-window-button-colors-settings binary: a standalone
+    GTK3 application, registered in the XFCE Settings Manager, that
+    will host enabling/disabling the module and managing stored
+    per-window colours without editing xfconf by hand. This release
+    ships the application shell and packaging; the toggle and colour
+    management UI land in a follow-up.
+  * Adds libxfconf-0-dev to Build-Depends. The settings binary is the
+    only target linking xfconf; src/core/ stays free of gtk_/xfconf_/
+    wnck_ symbols, CI-enforced as before.
+
+ -- Jorge Alonso <desarrollos@enfoquestic.com>  Thu, 10 Sep 2026 12:00:00 +0000
+
 xfce4-window-button-colors (0.1.0) unstable; urgency=medium
 
   * Initial package. Ships the GTK3 module and its CSS provider (slices

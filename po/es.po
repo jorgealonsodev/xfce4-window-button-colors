@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: xfce4-window-button-colors 0.1.0\n"
-"Report-Msgid-Bugs-To: desarrollos@enfoquestic.com\n"
-"POT-Creation-Date: 2026-09-10 16:51+0200\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-10 20:06+0200\n"
 "PO-Revision-Date: 2026-09-10 16:51+0200\n"
 "Last-Translator: Jorge Alonso <desarrollos@enfoquestic.com>\n"
 "Language-Team: Spanish\n"
@@ -49,6 +49,9 @@ msgstr "Violeta"
 msgid "Pink"
 msgstr "Rosa"
 
+#. Removing the colour must be reachable from inside the dialog too:
+#. * the INVARIANT that every colour-selecting surface can also select
+#. * none applies here just as much as in the submenu.
 #: src/glue/lc-menu.c:193 src/glue/lc-dialogs.c:339
 msgid "No colour"
 msgstr "Sin color"
@@ -65,6 +68,94 @@ msgstr "Color de fondo"
 msgid "Eyedropper"
 msgstr "Cuentagotas"
 
+#. The icon alone is not self-explanatory to everyone, so the name
+#. * stays reachable as a tooltip regardless of which fallback was used.
 #: src/glue/lc-dialogs.c:131
 msgid "Pick a colour from the screen"
 msgstr "Elegir un color de la pantalla"
+
+#: src/settings/main.c:52 data/xfce4-window-button-colors-settings.desktop.in:4
+msgid "Window Button Colors"
+msgstr "Colores de botones de ventana"
+
+#: src/settings/lc-settings-ui.c:151
+msgid "Could not read the module autoload setting."
+msgstr "No se pudo leer el ajuste de carga automática del módulo."
+
+#: src/settings/lc-settings-ui.c:158
+msgid "The /Gtk/Modules setting has an unexpected type and was left untouched."
+msgstr "El ajuste /Gtk/Modules tiene un tipo inesperado y no se modificó."
+
+#: src/settings/lc-settings-ui.c:165
+msgid "Could not write the module autoload setting."
+msgstr "No se pudo escribir el ajuste de carga automática del módulo."
+
+#: src/settings/lc-settings-ui.c:221
+#, c-format
+msgid "Could not restart the panel: %s"
+msgstr "No se pudo reiniciar el panel: %s"
+
+#: src/settings/lc-settings-ui.c:259
+msgid "Restart the panel now?"
+msgstr "¿Reiniciar el panel ahora?"
+
+#: src/settings/lc-settings-ui.c:266
+msgid ""
+"The panel will briefly disappear and come back. If it does not come back, "
+"recover from a TTY with: xfconf-query -c xsettings -p /Gtk/Modules -r, then "
+"log in again."
+msgstr ""
+"El panel desaparecerá brevemente y volverá. Si no vuelve, recupérelo desde "
+"una TTY con: xfconf-query -c xsettings -p /Gtk/Modules -r, y vuelva a "
+"iniciar sesión."
+
+#: src/settings/lc-settings-ui.c:269
+msgid "_Restart"
+msgstr "_Reiniciar"
+
+#: src/settings/lc-settings-ui.c:315
+msgid "(untitled window)"
+msgstr "(ventana sin título)"
+
+#: src/settings/lc-settings-ui.c:316
+msgid "Remove"
+msgstr "Quitar"
+
+#: src/settings/lc-settings-ui.c:490
+msgid "Enable window button colours"
+msgstr "Activar los colores de los botones de ventana"
+
+#: src/settings/lc-settings-ui.c:502
+msgid ""
+"Configuration changed since this window opened — restart the panel to apply "
+"it."
+msgstr ""
+"La configuración cambió desde que se abrió esta ventana; reinicie el panel "
+"para aplicarla."
+
+#: src/settings/lc-settings-ui.c:507
+msgid "_Restart Panel"
+msgstr "_Reiniciar panel"
+
+#. ---- colour list (Phase 7, design D2/D8) ---------------------------
+#: src/settings/lc-settings-ui.c:512
+msgid "Stored window colours"
+msgstr "Colores de ventana guardados"
+
+#: src/settings/lc-settings-ui.c:524
+msgid "The window list is currently unavailable — nothing was changed."
+msgstr ""
+"La lista de ventanas no está disponible actualmente; no se realizó ningún "
+"cambio."
+
+#: src/settings/lc-settings-ui.c:529
+msgid "Clean Up _Orphaned Entries"
+msgstr "Limpiar entradas _huérfanas"
+
+#: data/xfce4-window-button-colors-settings.desktop.in:5
+msgid ""
+"Enable or disable per-window tasklist button colours and manage stored "
+"colours"
+msgstr ""
+"Active o desactive los colores de los botones de la lista de tareas por "
+"ventana y gestione los colores guardados"
