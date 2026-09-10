@@ -22,3 +22,6 @@ debian/files
 debian/*.substvars
 debian/xfce4-window-button-colors/
 obj-*/
+
+# Editor workspace files
+*.code-workspace

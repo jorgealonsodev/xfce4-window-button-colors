@@ -66,11 +66,22 @@ jobs:
           cp ../*.deb dist/
           cd dist && sha256sum *.deb > SHA256SUMS
 
+      - name: Locate hand-written release notes
+        id: notes
+        run: |
+          f="docs/RELEASE_NOTES_${{ steps.ver.outputs.tag }}.md"
+          if [ -f "$f" ]; then echo "path=$f" >> "$GITHUB_OUTPUT"
+          else echo "path=" >> "$GITHUB_OUTPUT"; fi
+
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
-          generate_release_notes: true
+          # Hand-written notes when docs/RELEASE_NOTES_<tag>.md exists,
+          # falling back to generated ones so a release is never blocked on
+          # having written them.
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.path == '' }}
           files: |
             dist/*.deb
             dist/SHA256SUMS
