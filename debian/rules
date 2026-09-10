@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@ --buildsystem=meson
+
+override_dh_auto_test:
+	dh_auto_test || (cat obj-*/meson-logs/testlog.txt || true; exit 1)

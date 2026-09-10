@@ -1,0 +1,28 @@
+Source: xfce4-launcher-colors
+Section: xfce
+Priority: optional
+Maintainer: Jorge Alonso <desarrollos@enfoquestic.com>
+Build-Depends: debhelper-compat (= 13),
+               meson (>= 0.56),
+               ninja-build,
+               pkg-config,
+               libglib2.0-dev (>= 2.56),
+               libgtk-3-dev (>= 3.22)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/jorgealonsodev/xfce4-launcher-colors
+
+Package: xfce4-launcher-colors
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         xfce4-panel (>= 4.16)
+Description: per-launcher background colours for the XFCE panel
+ A GTK3 module loaded in-process by xfce4-panel that paints a chosen
+ background colour behind individual panel launchers, so several launchers
+ for the same application can be told apart at a glance.
+ .
+ The module is installed but NOT enabled. Enabling it adds this module to
+ the session's GTK module list, which persists across logins, so it is left
+ as an explicit, reversible decision rather than something an install step
+ does on the user's behalf.

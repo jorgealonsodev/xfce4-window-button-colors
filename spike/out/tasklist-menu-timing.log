@@ -1,0 +1,12 @@
+** Message: 15:40:19.137: D2 [show] menu=0x59ce90ed9a30 items=17 alloc_h=1 natural_h=356 realized=0 visible=1
+** Message: 15:40:19.141: D2 [realize] menu=0x59ce90ed9a30 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
+** Message: 15:40:19.141: D2 [map] menu=0x59ce90ed9a30 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
+** Message: 15:40:22.592: D2 [show] menu=0x59ce90f04650 items=17 alloc_h=1 natural_h=356 realized=0 visible=1
+** Message: 15:40:22.596: D2 [realize] menu=0x59ce90f04650 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
+** Message: 15:40:22.596: D2 [map] menu=0x59ce90f04650 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
+** Message: 15:40:27.731: D2 [show] menu=0x59ce90f04650 items=17 alloc_h=1 natural_h=356 realized=0 visible=1
+** Message: 15:40:27.733: D2 [realize] menu=0x59ce90f04650 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
+** Message: 15:40:27.733: D2 [map] menu=0x59ce90f04650 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
+** Message: 15:40:37.804: D2 [show] menu=0x59ce90f04650 items=17 alloc_h=1 natural_h=356 realized=0 visible=1
+** Message: 15:40:37.807: D2 [realize] menu=0x59ce90f04650 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
+** Message: 15:40:37.807: D2 [map] menu=0x59ce90f04650 items=18 alloc_h=395 natural_h=395 realized=1 visible=1
