@@ -1,9 +1,10 @@
-/* lc-autoload.c — see lc-autoload.h for the design rationale (D1) and
- * the Phase 2 / Phase 3 split. This file implements ONLY the five pure
- * list transforms declared there; lc_autoload_set_enabled() is declared
- * in the header but has NO BODY here — Phase 3 adds it in this same
- * file, alongside LcAutoloadShape's actual read/write orchestration and
- * D1's full table.
+/* lc-autoload.c — see lc-autoload.h for the design rationale (D1). This
+ * file implements the five pure list transforms (normalize/join/
+ * is_enabled/add/remove) AND lc_autoload_set_enabled(), the
+ * orchestration layer that reads a shape via LcAutoloadBackend, applies
+ * add/remove, and decides the write-back shape per D1's table. Neither
+ * half touches xfconf — the vtable's real implementation is Phase 4's
+ * src/settings/lc-autoload-xfconf.c.
  */
 #include "lc-autoload.h"
 
@@ -155,4 +156,125 @@ lc_autoload_remove (const gchar *const *modules, const gchar *name)
   g_ptr_array_add (out, NULL);
 
   return (gchar **) g_ptr_array_free (out, FALSE);
+}
+
+/* ---- set_enabled — orchestration over the vtable, D1's shape table --- */
+
+/* TRUE iff `a` and `b` hold the exact same NULL-terminated sequence of
+ * strings, in the same order. A NULL pointer is treated identically to
+ * a zero-length array, matching every pure transform's own NULL
+ * convention above. This decides LC_AUTOLOAD_NO_CHANGE below: if
+ * add()/remove() produced a list that is not byte-for-byte identical to
+ * what was read, something changed and a write is owed; if it is
+ * identical, D1's "never write when nothing changed" rule applies — the
+ * same rule lc_winstore_reconcile() already documents for pruning,
+ * carried here to xfconf.
+ */
+static gboolean
+modules_equal (const gchar *const *a, const gchar *const *b)
+{
+  guint i;
+
+  for (i = 0; ; i++)
+    {
+      gboolean a_has = (a != NULL && a[i] != NULL);
+      gboolean b_has = (b != NULL && b[i] != NULL);
+
+      if (!a_has && !b_has)
+        return TRUE;
+      if (a_has != b_has)
+        return FALSE;
+      if (g_strcmp0 (a[i], b[i]) != 0)
+        return FALSE;
+    }
+}
+
+/* See lc-autoload.h for the full contract. Implements D1's table:
+ *
+ *   read shape      | resulting list | write-back
+ *   ----------------|-----------------|------------------------------
+ *   ABSENT          | non-empty       | SCALAR (only shape with
+ *                    |                 | positive shipped evidence)
+ *   SCALAR / ARRAY   | non-empty       | the shape FOUND, unchanged —
+ *                    |                 | never converted either way
+ *   any              | empty           | remove the key (write ABSENT,
+ *                    |                 | `modules` ignored)
+ *   any other GType  | —               | never write; UNSUPPORTED_SHAPE
+ */
+LcAutoloadResult
+lc_autoload_set_enabled (const LcAutoloadBackend *backend, gpointer user_data,
+                          const gchar *name, gboolean enabled)
+{
+  LcAutoloadShape shape;
+  gchar **current = NULL;
+  gchar **updated;
+  LcAutoloadResult result;
+
+  g_return_val_if_fail (backend != NULL, LC_AUTOLOAD_READ_FAILED);
+  g_return_val_if_fail (name != NULL, LC_AUTOLOAD_READ_FAILED);
+
+  /* 1. Read. The shape is a witness, carried unchanged to write() below
+   * (D1). `current` is already the NORMALIZED module list for SCALAR
+   * and ARRAY, per the backend contract in lc-autoload.h; ABSENT
+   * carries no list at all (backend->read leaves `current` untouched,
+   * so it stays at its NULL initializer). */
+  if (!backend->read (user_data, &shape, &current))
+    return LC_AUTOLOAD_READ_FAILED;
+
+  /* 2. Refuse outright on any shape we do not recognise (D1's
+   * "present, any other type" row), rather than guess a conversion —
+   * an unrecognised GType is exactly the case where guessing risks
+   * destroying a value another module depends on. */
+  if (shape != LC_AUTOLOAD_SHAPE_ABSENT &&
+      shape != LC_AUTOLOAD_SHAPE_SCALAR &&
+      shape != LC_AUTOLOAD_SHAPE_ARRAY)
+    {
+      g_strfreev (current);
+      return LC_AUTOLOAD_UNSUPPORTED_SHAPE;
+    }
+
+  /* 3. Apply the pure transform for the requested direction. Every
+   * OTHER entry in `current` survives into `updated` unchanged, in
+   * order — that guarantee lives in lc_autoload_add()/remove() above,
+   * not here; this function only decides WHETHER and HOW to write the
+   * result back. */
+  updated = enabled ? lc_autoload_add ((const gchar *const *) current, name)
+                     : lc_autoload_remove ((const gchar *const *) current, name);
+
+  /* 4. Nothing changed ⇒ never write. Enabling an already-enabled
+   * module and disabling an absent one both land here. */
+  if (modules_equal ((const gchar *const *) current, (const gchar *const *) updated))
+    {
+      g_strfreev (current);
+      g_strfreev (updated);
+      return LC_AUTOLOAD_NO_CHANGE;
+    }
+
+  /* 5. Decide the write-back shape per D1's table (see the comment
+   * above this function). */
+  if (updated[0] == NULL)
+    {
+      /* The result is empty: remove the key entirely rather than write
+       * an empty scalar/array — an empty value is not the same on-disk
+       * state as "absent", and D1 is explicit that the key is only
+       * removed when it is genuinely empty. */
+      result = backend->write (user_data, LC_AUTOLOAD_SHAPE_ABSENT, NULL)
+                   ? LC_AUTOLOAD_OK : LC_AUTOLOAD_WRITE_FAILED;
+    }
+  else
+    {
+      /* Absent → scalar (the only shape with positive shipped
+       * evidence); otherwise the shape ALREADY FOUND, carried
+       * unchanged — never SCALAR→ARRAY or ARRAY→SCALAR, because that
+       * re-types a key another module may already depend on. */
+      LcAutoloadShape write_shape =
+          (shape == LC_AUTOLOAD_SHAPE_ABSENT) ? LC_AUTOLOAD_SHAPE_SCALAR : shape;
+
+      result = backend->write (user_data, write_shape, (const gchar *const *) updated)
+                   ? LC_AUTOLOAD_OK : LC_AUTOLOAD_WRITE_FAILED;
+    }
+
+  g_strfreev (current);
+  g_strfreev (updated);
+  return result;
 }

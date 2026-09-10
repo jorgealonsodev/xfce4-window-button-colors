@@ -86,19 +86,19 @@ function that does not split cleanly.
 
 ## Phase 3 — Slice 3: `lc-autoload` orchestration and the D1 shape table
 
-- [ ] 3.1 RED: extend `tests/test-autoload.c` — a fake `LcAutoloadBackend` recording every `write` call, its shape, and its list.
-- [ ] 3.2 RED: same — key absent, enable ⇒ key created holding exactly our module ("Key absent, enable").
-- [ ] 3.3 RED: same — scalar holding only ours, enable is idempotent, no duplication ("...enable is idempotent").
-- [ ] 3.4 RED: same — scalar holding a different module, enable preserves it byte-for-byte, no duplicate ("...enable preserves it").
-- [ ] 3.5 RED: same — array with third-party modules, enable preserves them, ours appears exactly once ("...enable preserves them").
-- [ ] 3.6 RED: same — enabling twice returns `LC_AUTOLOAD_NO_CHANGE` and `write` is never called ("Enabling twice is idempotent").
-- [ ] 3.7 RED: same — scalar holding only ours, disable clears the key entirely ("...disable clears it").
-- [ ] 3.8 RED: same — array with third-party modules, disable removes only ours, others byte-for-byte unchanged ("...disable removes only ours").
-- [ ] 3.9 RED: same — disabling when not present is a no-op, `write` never called ("Disabling when we are not present is a no-op").
-- [ ] 3.10 RED: same — `LC_AUTOLOAD_UNSUPPORTED_SHAPE` on an unrecognised `GType`, `write` never called; also: empty array, array with `NULL` elements, `"::"`, whitespace-only element (threat matrix: untrusted `/Gtk/Modules` input).
-- [ ] 3.11 RED: same — `read` returning `FALSE` ⇒ `LC_AUTOLOAD_READ_FAILED`, no write; `write` returning `FALSE` ⇒ `LC_AUTOLOAD_WRITE_FAILED`.
-- [ ] 3.12 GREEN: `src/core/lc-autoload.{c,h}` — `LcAutoloadShape`/`LcAutoloadResult` enums, `LcAutoloadBackend`, `lc_autoload_set_enabled()` implementing D1's full table.
-- [ ] 3.13 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; confirm every D1-table test asserts a third-party entry survives.
+- [x] 3.1 RED: extend `tests/test-autoload.c` — a fake `LcAutoloadBackend` recording every `write` call, its shape, and its list.
+- [x] 3.2 RED: same — key absent, enable ⇒ key created holding exactly our module ("Key absent, enable").
+- [x] 3.3 RED: same — scalar holding only ours, enable is idempotent, no duplication ("...enable is idempotent").
+- [x] 3.4 RED: same — scalar holding a different module, enable preserves it byte-for-byte, no duplicate ("...enable preserves it").
+- [x] 3.5 RED: same — array with third-party modules, enable preserves them, ours appears exactly once ("...enable preserves them").
+- [x] 3.6 RED: same — enabling twice returns `LC_AUTOLOAD_NO_CHANGE` and `write` is never called ("Enabling twice is idempotent").
+- [x] 3.7 RED: same — scalar holding only ours, disable clears the key entirely ("...disable clears it").
+- [x] 3.8 RED: same — array with third-party modules, disable removes only ours, others byte-for-byte unchanged ("...disable removes only ours").
+- [x] 3.9 RED: same — disabling when not present is a no-op, `write` never called ("Disabling when we are not present is a no-op").
+- [x] 3.10 RED: same — `LC_AUTOLOAD_UNSUPPORTED_SHAPE` on an unrecognised `GType`, `write` never called; also: empty array, array with `NULL` elements, `"::"`, whitespace-only element (threat matrix: untrusted `/Gtk/Modules` input).
+- [x] 3.11 RED: same — `read` returning `FALSE` ⇒ `LC_AUTOLOAD_READ_FAILED`, no write; `write` returning `FALSE` ⇒ `LC_AUTOLOAD_WRITE_FAILED`.
+- [x] 3.12 GREEN: `src/core/lc-autoload.{c,h}` — `LcAutoloadShape`/`LcAutoloadResult` enums, `LcAutoloadBackend`, `lc_autoload_set_enabled()` implementing D1's full table.
+- [x] 3.13 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; confirm every D1-table test asserts a third-party entry survives.
 
 ## Phase 4 — Slice 4: Shell and packaging
 

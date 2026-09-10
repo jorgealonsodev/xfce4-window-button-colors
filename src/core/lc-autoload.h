@@ -1,6 +1,6 @@
 /* lc-autoload.h — pure gchar** list transforms for the `/Gtk/Modules`
- * autoload key (design.md D1), plus the orchestration TYPES this file
- * commits to now so Phase 3 can add the implementation additively.
+ * autoload key (design.md D1), plus the orchestration layer that decides
+ * how to write that key back without ever touching xfconf itself.
  *
  * `/Gtk/Modules` has no fixed schema type: xfconf may hold it absent, as
  * a scalar string (the shape the README's own `-n -t string -s` command
@@ -12,15 +12,15 @@
  *
  *   - the FIVE pure functions below (normalize/join/is_enabled/add/remove)
  *     operate only on an in-memory, NULL-terminated `gchar **` list — no
- *     xfconf, no I/O, and no knowledge of "shape" at all. This is the
- *     whole of what this slice (Phase 2) implements.
+ *     xfconf, no I/O, and no knowledge of "shape" at all.
  *   - `LcAutoloadShape`, `LcAutoloadResult`, `LcAutoloadBackend`, and
  *     `lc_autoload_set_enabled()` are the orchestration layer that reads
- *     the shape, applies add/remove, and decides the write-back shape
- *     per D1's table. Those names are DECLARED here so the public API
- *     surface is fixed in one place, but `lc_autoload_set_enabled()` has
- *     NO BODY yet — it is implemented in Phase 3, against a fake
- *     `LcAutoloadBackend`, never here. Nothing in this slice calls it.
+ *     the shape via the vtable, applies add/remove, and decides the
+ *     write-back shape per D1's table. This layer is still xfconf-free —
+ *     it is tested against a fake `LcAutoloadBackend` in
+ *     tests/test-autoload.c. The real, xfconf-backed implementation of
+ *     `LcAutoloadBackend` lives in Phase 4's
+ *     src/settings/lc-autoload-xfconf.c, entirely out of this file.
  *
  * `lc_autoload_normalize()` closes the actual bug this design exists to
  * prevent: GTK's own `gtk-modules` value is colon-separated, so a scalar
@@ -47,13 +47,11 @@ G_BEGIN_DECLS
 
 /* The on-disk shape `/Gtk/Modules` was found in, carried unchanged from
  * `read` to `write` (D1's "the shape is a witness" choice). ABSENT is
- * the shape `read` reports when the key has never existed at all.
- * UNKNOWN covers any xfconf value type other than a string or a string
- * array — D1 says refuse the write outright rather than guess a
- * conversion. Declared here (Phase 2) because every pure transform's
- * contract below is expressed independently of shape, but the enum's
- * only callers — `LcAutoloadBackend` and `lc_autoload_set_enabled()` —
- * are Phase 3. */
+ * the shape `read` reports when the key has never existed at all, and
+ * is also what `write` is called with to mean "delete the key entirely"
+ * (the write-back decision when the resulting list is empty). UNKNOWN
+ * covers any xfconf value type other than a string or a string array —
+ * D1 says refuse the write outright rather than guess a conversion. */
 typedef enum {
   LC_AUTOLOAD_SHAPE_ABSENT,
   LC_AUTOLOAD_SHAPE_SCALAR,
@@ -74,14 +72,17 @@ typedef enum {
   LC_AUTOLOAD_WRITE_FAILED
 } LcAutoloadResult;
 
-/* The xfconf-facing vtable lc_autoload_set_enabled() (Phase 3) will
- * orchestrate against. Exactly two functions, deliberately: `read`
- * reports the current shape and, for SCALAR/ARRAY, the normalized
- * module list; `write` commits a shape and list back. Declaring this
- * struct here — fully, not opaquely — lets Phase 3 add its one real
- * implementation (xfconf-backed, in src/settings/) and its fake test
- * implementation without reopening this header again. Defined but not
- * referenced by any function body in this slice. */
+/* The xfconf-facing vtable lc_autoload_set_enabled() orchestrates
+ * against. Exactly two functions, deliberately: `read` reports the
+ * current shape and, for SCALAR/ARRAY, the ALREADY NORMALIZED module
+ * list (a real backend calls lc_autoload_normalize() itself on a raw
+ * scalar before returning it — this header, not the backend, owns that
+ * rule); `write` commits a shape and list back, where shape ABSENT
+ * means "delete the key" and `modules` is then ignored. Declaring this
+ * struct here — fully, not opaquely — lets one real implementation
+ * (xfconf-backed, in src/settings/lc-autoload-xfconf.c, Phase 4) and a
+ * fake test implementation (tests/test-autoload.c) both exist against
+ * the exact same contract. */
 typedef struct {
   gboolean (*read)  (gpointer user_data, LcAutoloadShape *out_shape, gchar ***out_modules);
   gboolean (*write) (gpointer user_data, LcAutoloadShape shape, const gchar *const *modules);
@@ -128,18 +129,21 @@ gchar **lc_autoload_add (const gchar *const *modules, const gchar *name);
  * the returned array (g_strfreev()). */
 gchar **lc_autoload_remove (const gchar *const *modules, const gchar *name);
 
-/* ---- orchestration — DECLARED here, DEFINED in Phase 3 ---------------
- *
- * There is no function body behind this prototype in this slice. Do not
- * call it yet: it is added, together with LC_AUTOLOAD_SHAPE_*'s read/write
- * orchestration and the full D1 table, in Phase 3.
- */
+/* ---- orchestration over the vtable — D1's full shape table ------------ */
 
 /* Reads the current shape and list via `backend->read`, applies
  * lc_autoload_add()/lc_autoload_remove() per `enabled`, decides the
  * write-back shape per D1's table, and calls `backend->write` unless
  * nothing changed. `user_data` is passed through to both vtable calls
- * unmodified. */
+ * unmodified.
+ *
+ * Returns LC_AUTOLOAD_READ_FAILED if `backend->read` reports failure
+ * (no write is attempted); LC_AUTOLOAD_UNSUPPORTED_SHAPE if the shape
+ * read is neither ABSENT, SCALAR nor ARRAY (no write is attempted);
+ * LC_AUTOLOAD_NO_CHANGE if the requested add/remove would not change
+ * anything (no write is attempted — enabling an already-enabled module
+ * or disabling an absent one both land here); LC_AUTOLOAD_WRITE_FAILED
+ * if `backend->write` reports failure; LC_AUTOLOAD_OK otherwise. */
 LcAutoloadResult lc_autoload_set_enabled (const LcAutoloadBackend *backend, gpointer user_data,
                                            const gchar *name, gboolean enabled);
 
