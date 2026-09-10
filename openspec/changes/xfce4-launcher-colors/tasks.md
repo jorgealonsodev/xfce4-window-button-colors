@@ -203,7 +203,7 @@ live-panel step.
 - [x] 3.3 Create `src/glue/module.c` with `gtk_module_init`/`gtk_module_exit`: guard first (1.4), static `initialized` flag idempotency, `lc_settings_load()` before any render (lifecycle step 4 — stub default-only settings for now).
 - [x] 3.4 Create `src/glue/lc-provider.{c,h}` — **sole** owner of `LC_PROVIDER_PRIORITY` and `lc_provider_attach()` (D7), using the priority chosen in 2.6; register the provider from `lc_store_render()` output via `load_from_data()` only — never `load_from_file(colors.css)` (D8).
 - [x] 3.5 Wire `module.c` to call `lc_store_load()` → `lc_store_render()` → `lc_provider_attach()`/`load_from_data()` at init; a `GError` from CSS parsing discards the rule set with one warning, never propagated (lifecycle step 7).
-- [x] 3.6 Verify: `meson test -C build`; manual — load via `/Gtk/Modules` on 4.18.4, confirm the guard is inert in another GTK3 app (e.g. `gedit`), confirm no crash on a hand-corrupted `colors.css`.
+- [x] 3.6 Verify: `meson test -C build`; manual — load via `/Gtk/Modules` on 4.18.4, confirm the guard is inert in another GTK3 app (e.g. `gedit`), confirm no crash on a hand-corrupted `colors.css`. **Offline portion done**: 6/6 meson tests; guard proven inert under a non-panel `prgname` in a throwaway GTK3 process; paint proven exact against a resolved widget background under `Xvfb`; init/exit proven idempotent both ways in one process; corrupt `colors.css` warns once and exits 0. **The live-panel load is still OUTSTANDING** — it restarts the user's desktop panel, so it is held for an explicitly consented run, scoped via `GTK_MODULES` to that panel process only and never the session-wide xfconf key.
 
 ## Phase 4 — Slice 4 (H1-b): Detection, Menu, Colour Apply (RF-1…RF-5, RF-9)
 
