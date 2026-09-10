@@ -198,8 +198,8 @@ live-panel step.
 
 ## Phase 3 — Slice 3 (H1-a): Module Entry and Load Path
 
-- [ ] 3.1 RED: `tests/test-store-load.c` — `LcStore` load/parse of a well-formed `colors.css` with `/* id=<n> fp=<hex6> */` markers (schema=2), and of a missing/unreadable/malformed file degrading to an empty store with one warning (`launcher-color-persistence` "Malformed Configuration Degrades Safely").
-- [ ] 3.2 GREEN: `src/core/lc-store.{c,h}` — load/parse only (record-oriented marker parser); `lc_store_render()` for full-document rendering incl. markers (D16 groundwork).
+- [x] 3.1 RED: `tests/test-store-load.c` — `LcStore` load/parse of a well-formed `colors.css` with `/* id=<n> fp=<hex6> */` markers (schema=2), and of a missing/unreadable/malformed file degrading to an empty store with one warning (`launcher-color-persistence` "Malformed Configuration Degrades Safely").
+- [x] 3.2 GREEN: `src/core/lc-store.{c,h}` — load/parse only (record-oriented marker parser); `lc_store_render()` for full-document rendering incl. markers (D16 groundwork).
 - [ ] 3.3 Create `src/glue/module.c` with `gtk_module_init`/`gtk_module_exit`: guard first (1.4), static `initialized` flag idempotency, `lc_settings_load()` before any render (lifecycle step 4 — stub default-only settings for now).
 - [ ] 3.4 Create `src/glue/lc-provider.{c,h}` — **sole** owner of `LC_PROVIDER_PRIORITY` and `lc_provider_attach()` (D7), using the priority chosen in 2.6; register the provider from `lc_store_render()` output via `load_from_data()` only — never `load_from_file(colors.css)` (D8).
 - [ ] 3.5 Wire `module.c` to call `lc_store_load()` → `lc_store_render()` → `lc_provider_attach()`/`load_from_data()` at init; a `GError` from CSS parsing discards the rule set with one warning, never propagated (lifecycle step 7).

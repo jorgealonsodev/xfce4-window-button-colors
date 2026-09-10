@@ -35,3 +35,10 @@ test_paths = executable(
   dependencies: [lc_core_dep],
 )
 test('paths', test_paths)
+
+test_store_load = executable(
+  'test-store-load',
+  'test-store-load.c',
+  dependencies: [lc_core_dep],
+)
+test('store-load', test_store_load)

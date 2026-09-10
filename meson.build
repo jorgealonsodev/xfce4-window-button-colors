@@ -26,6 +26,7 @@ lc_core_sources = files(
   'src/core/lc-color.c',
   'src/core/lc-css.c',
   'src/core/lc-paths.c',
+  'src/core/lc-store.c',
 )
 
 lc_core = static_library(
