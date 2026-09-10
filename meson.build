@@ -32,6 +32,7 @@ lc_core_sources = files(
   'src/core/lc-winid.c',
   'src/core/lc-winstore.c',
   'src/core/lc-restart.c',
+  'src/core/lc-autoload.c',
 )
 
 lc_core = static_library(

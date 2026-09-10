@@ -76,13 +76,13 @@ function that does not split cleanly.
 
 ## Phase 2 — Slice 2: `lc-autoload` pure transforms
 
-- [ ] 2.1 RED: `tests/test-autoload.c` — `lc_autoload_add` on an empty list (module-autoload-toggle "Add to an empty list").
-- [ ] 2.2 RED: same file — `lc_autoload_remove` preserves every other entry, unchanged, in order ("Remove preserves other entries").
-- [ ] 2.3 RED: same file — `lc_autoload_remove` when absent is a no-op ("Remove when absent is a no-op").
-- [ ] 2.4 RED: same file — `lc_autoload_normalize` splits `:`-joined scalars, trims, drops empties; `lc_autoload_join` round-trips; `lc_autoload_is_enabled` is exact-match only (`"ours-extra"` ≠ `"ours"`).
-- [ ] 2.5 GREEN: `src/core/lc-autoload.{c,h}` — `normalize`/`join`/`is_enabled`/`add`/`remove` only. Declare (do not yet define) `LcAutoloadBackend` and `lc_autoload_set_enabled()` for Phase 3.
-- [ ] 2.6 Wire `tests/meson.build`: add the `test-autoload` executable and `test()`.
-- [ ] 2.7 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
+- [x] 2.1 RED: `tests/test-autoload.c` — `lc_autoload_add` on an empty list (module-autoload-toggle "Add to an empty list").
+- [x] 2.2 RED: same file — `lc_autoload_remove` preserves every other entry, unchanged, in order ("Remove preserves other entries").
+- [x] 2.3 RED: same file — `lc_autoload_remove` when absent is a no-op ("Remove when absent is a no-op").
+- [x] 2.4 RED: same file — `lc_autoload_normalize` splits `:`-joined scalars, trims, drops empties; `lc_autoload_join` round-trips; `lc_autoload_is_enabled` is exact-match only (`"ours-extra"` ≠ `"ours"`).
+- [x] 2.5 GREEN: `src/core/lc-autoload.{c,h}` — `normalize`/`join`/`is_enabled`/`add`/`remove` only. Declare (do not yet define) `LcAutoloadBackend` and `lc_autoload_set_enabled()` for Phase 3.
+- [x] 2.6 Wire `tests/meson.build`: add the `test-autoload` executable and `test()`.
+- [x] 2.7 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
 
 ## Phase 3 — Slice 3: `lc-autoload` orchestration and the D1 shape table
 
