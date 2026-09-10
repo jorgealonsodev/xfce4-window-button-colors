@@ -1,2 +1,5 @@
 src/glue/lc-menu.c
 src/glue/lc-dialogs.c
+src/settings/main.c
+src/settings/lc-settings-ui.c
+data/xfce4-window-button-colors-settings.desktop.in

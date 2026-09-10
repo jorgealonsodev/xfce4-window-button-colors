@@ -1,16 +1,19 @@
 schema: spec-driven
 
 context: |
-  Project: xfce4-launcher-colors (GTK module for xfce4-panel launcher backgrounds)
-  Tech stack: C (C11), GTK 3, libxfce4panel-2.0, libxfce4util-1.0, xfconf-0
-  Build: Meson + Ninja, gettext (i18n)
-  Packaging: Debian .deb (dpkg-buildpackage) + tar.gz with install.sh
-  Architecture: in-process GTK module loaded by xfce4-panel via GTK_MODULES/xsettings
-  Testing: meson test -C build (Meson test harness); no test scaffolding exists yet
-  Status: greenfield — no source code, no meson.build, PRD only
+  Project: xfce4-window-button-colors (renamed from xfce4-launcher-colors after a
+  product pivot: per-window tasklist button colors, not launcher backgrounds)
+  Tech stack: C11, Meson + Ninja, GLib/GIO, GTK 3, libwnck 3, gettext (po/)
+  Layout: src/core/ (pure glib/gio, CI-enforced free of gtk_/xfconf_/wnck_ symbols) +
+  src/glue/ (all GTK + libwnck code, module entry point, tasklist hook, menu, dialogs)
+  Packaging: Debian .deb via debhelper/meson, lintian-clean; GitHub Actions CI + a
+  tag-driven release workflow that refuses to publish on tag/meson.build/changelog drift
+  Testing: meson test -C build; 6 suites (guard, color, css, paths, winid, winstore);
+  CI re-runs the full suite under LC_ALL=es_ES.UTF-8 to guard a fixed locale CSS bug
+  Status: v0.1.0 released; module installed but not enabled by default
   License: GPL-2.0-or-later
 
-strict_tdd: true  # slice 1 bootstrapped meson.build + meson test scaffolding; see testing-capabilities
+strict_tdd: true  # single workspace test command (meson test -C build) covers all 6 suites; tests carry RED-test provenance comments
 artifact_store: hybrid
 execution_mode: auto
 delivery_strategy: auto-chain
@@ -19,50 +22,44 @@ testing:
   test_command: "meson test -C build"
   build_command: "meson setup build && ninja -C build"
   coverage_threshold: 0
-  status: bootstrapped   # slice 1 landed meson.build + core static lib + meson test scaffolding
-  toolchain_missing: []      # resolved 2026-09-09 via apt
+  status: active   # 6 suites passing under CI, including the es_ES.UTF-8 locale re-run
   toolchain_present:
-    - "meson 1.3.2"
-    - "ninja 1.11.1"
-    - "gcc 13.3.0"
-    - "pkg-config 1.8.1"
-    - "gtk+-3.0 3.24.41"
-    - "libxfce4panel-2.0 4.18.4"
-    - "libxfce4util-1.0 4.18.1"
-    - "libxfconf-0 4.18.1"
-    - "gettext 0.21"
-    - "xfce4-panel 4.18.4 (runtime, for manual verification)"
-  # Installed header verified against upstream: the menu API sits at the same lines
-  # (166 get_unique_id, 205 menu_insert_item, 212 menu_destroy) as the xfce4-panel-4.16.0 tag.
-  # No distro patching — closes residual research gap 4.
-  # Only 4.18.4 is available here; RNF-7 coverage of 4.16 and 4.20 needs the H3 CI matrix.
+    - "meson, ninja, gcc, pkg-config, gettext (CI: ubuntu-24.04)"
+    - "glib-2.0 >= 2.56, gio-2.0 >= 2.56"
+    - "gtk+-3.0 >= 3.22, gmodule-2.0, libwnck-3.0"
+    - "libxfconf-0-dev (packaging build-dep; debian/control is the authoritative contract, D6)"
+    - "debhelper-compat 13, devscripts, fakeroot, lintian"
+  ci:
+    - "build-and-test job: meson setup -Dwarning_level=2 -Dwerror=true, meson compile, meson test --print-errorlogs"
+    - "asserts liblc-core.a has zero gtk_/xfconf_/wnck_ symbols via nm -u"
+    - "re-runs meson test under LC_ALL=es_ES.UTF-8 LC_NUMERIC=es_ES.UTF-8 (regression guard for a locale-dependent CSS formatting bug)"
+    - "package job: dpkg-buildpackage -us -uc -b, then lintian"
+    - "release.yml (tag push v*): refuses to publish when tag/meson.build/debian changelog versions disagree"
 
 rules:
   proposal:
-    - Include rollback plan for risky changes (module must never crash xfce4-panel; document silent-abort fallback per RNF-6)
-    - Reference PRD_xfce4-launcher-colors.md as source of truth for scope
+    - Include rollback plan for risky changes (module must never crash xfce4-panel; fail silently)
+    - Preserve the src/core/ vs src/glue/ boundary; core must stay glib/gio-only (no gtk_/xfconf_/wnck_ symbols)
   specs:
     - Use Given/When/Then for scenarios
     - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
-    - Map each requirement to its PRD RF-/RNF- ID
   design:
-    - Document the GTK module load/unload lifecycle and the xfce4-panel-only guard (g_get_prgname check)
-    - Document the menu-hook mechanism and its per-version (4.16/4.18/4.20) risk per PRD §7.4/§11
-    - Include the CSS provider reload flow and colors.css schema
+    - Document any change to the CSS provider priority/attach/detach lifecycle in src/glue/lc-provider.c
+    - Document any change to tasklist window-button detection/tagging in src/glue/lc-tasklist.c
   tasks:
-    - Group by phase (H0 spike, H1 MVP, H2 autoload/settings, H3 packaging, H4 polish) per PRD §12
     - Keep tasks completable in one session
-    - First task must bootstrap meson.build and a minimal testable core before any GTK-module code
+    - Any new testable logic goes in src/core/ first, glue wiring follows
   apply:
     guidelines:
       - Follow XFCE/GTK3 C conventions (GLib naming, g_autoptr where applicable)
-      - Isolate testable logic (CSS generation, id parsing, xfconf key handling) from GTK/panel glue for unit testing without a running panel
-      - Never allow the module to crash xfce4-panel; fail silently per RNF-6
-    tdd: true    # meson.build + meson test scaffolding now exist and cover the testable core (slice 1)
+      - Never add a GTK, xfconf, or libwnck dependency to src/core/ — CI enforces this via nm -u symbol scan
+      - Never allow the module to crash xfce4-panel; fail silently
+    tdd: true    # RED-then-GREEN discipline confirmed in tests/ (e.g. tests/test-color.c RED-test header comments)
     test_command: "meson test -C build"
   verify:
     test_command: "meson test -C build"
     build_command: "meson setup build && ninja -C build"
     coverage_threshold: 0
+    locale_regression_check: "LC_ALL=es_ES.UTF-8 LC_NUMERIC=es_ES.UTF-8 meson test -C build --print-errorlogs"
   archive:
     - Warn before merging destructive deltas
