@@ -14,17 +14,15 @@ It is a GTK 3 module loaded in-process by `xfce4-panel`. It adds a **Background 
 
 1. Install the package:
    ```sh
-   sudo dpkg -i xfce4-window-button-colors_0.1.0_amd64.deb
+   sudo dpkg -i xfce4-window-button-colors_0.2.0_amd64.deb
    sudo apt-get -f install     # pulls in any missing dependency
    ```
-2. Enable the module for your session, then restart the panel:
-   ```sh
-   xfconf-query -c xsettings -p /Gtk/Modules -n -t string -s xfce4-window-button-colors
-   xfce4-panel -r
-   ```
+2. Open **Settings Manager → Window Button Colors** (or run `xfce4-window-button-colors-settings`), turn on **Enable window button colours**, then click **Restart Panel**.
 3. Right-click any window button in the panel → **Background colour** → pick one.
 
 The button should be painted immediately. If it is not, see [Troubleshooting](#troubleshooting).
+
+Prefer the command line, or need to script this? See [Enabling and disabling](#enabling-and-disabling) for the equivalent `xfconf-query` commands.
 
 ## Using it
 
@@ -65,15 +63,25 @@ The stored file is generated. Editing it by hand is not expected to be useful, b
 
 Installing the package does **not** enable the module. That is deliberate.
 
-Enabling means adding the module to your session's GTK module list, which persists across logins. If a module there ever failed to load, you would be left without a panel at the next login and would need a TTY to recover. Turning it on is your decision, made once, and reversible:
+Enabling means adding the module to your session's GTK module list, which persists across logins. If a module there ever failed to load, you would be left without a panel at the next login and would need a TTY to recover. Turning it on is your decision, made once, and reversible.
+
+### Settings application (recommended)
+
+Open **Settings Manager → Window Button Colors**, or run `xfce4-window-button-colors-settings` directly. Toggle **Enable window button colours** on or off, then click **Restart Panel** to apply the change — the toggle itself never restarts the panel. Always use this path to disable the module: it edits the existing `/Gtk/Modules` value in place and leaves every other entry untouched, which is not true of a blind key reset (see below).
+
+### Alternative: `xfconf-query` directly
+
+For scripting, or a one-off session without the settings application:
 
 ```sh
-# Off again
-xfconf-query -c xsettings -p /Gtk/Modules -r
+# On
+xfconf-query -c xsettings -p /Gtk/Modules -n -t string -s xfce4-window-button-colors
 xfce4-panel -r
 ```
 
-To try it for one panel session only, without touching your session settings at all:
+There is no equally simple one-line command to turn it back off this way. The command shown in [Troubleshooting](#troubleshooting) for TTY recovery resets the *entire* `/Gtk/Modules` key, which deletes any other application's autoload module too if the key lists more than one — that is why it is a recovery instruction, not the ordinary disable command. Use the settings application to disable safely, or edit the key by hand only once you have confirmed its current shape holds nothing else.
+
+To try the module for one panel session only, without touching your session settings at all:
 
 ```sh
 pkill -x xfce4-panel
