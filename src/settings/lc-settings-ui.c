@@ -48,6 +48,10 @@ typedef struct
   GtkWidget     *colorlist_unavailable_label; /* shown instead of colorlist_rows */
   GtkWidget     *cleanup_button;
   gulong         colorlist_map_handler_id;
+
+  /* Pending deferred colour-list refresh; 0 when none. Cancelled on
+   * destroy so the idle can never fire against a freed LcSettingsUi. */
+  guint colorlist_refresh_idle_id;
 } LcSettingsUi;
 
 /* ---- shared error/hint surfacing --------------------------------------- */
@@ -397,12 +401,49 @@ lc_settings_ui_colorlist_refresh (LcSettingsUi *ui)
   lc_winlist_rows_free (rows, n_rows);
 }
 
+/* Deferred out of the "map" handler on purpose.
+ *
+ * D2's probe needs our own toplevel to appear in the window manager's
+ * client list. Being mapped is NOT the same as being known to the window
+ * manager: at the instant "map" fires, GTK has mapped the X window but
+ * the WM has not yet processed it, so _NET_CLIENT_LIST does not list us
+ * and libwnck cannot see us either.
+ *
+ * Measured on a live session with 28 other windows open: probing
+ * synchronously from "map" -- on the child box or on the toplevel, both
+ * were tried -- never finds our own XID, so the probe correctly concludes
+ * the snapshot is incomplete and the list stays permanently unavailable,
+ * because nothing retries. Deferring by a single main-loop iteration is
+ * enough for the WM to catch up, after which the probe succeeds.
+ *
+ * This is the same shape as the module's own incident 1: libwnck work
+ * that looks ready to run is not, and the fix is to let the main loop
+ * turn once first. */
+static gboolean
+lc_settings_ui_colorlist_refresh_idle (gpointer user_data)
+{
+  LcSettingsUi *ui = user_data;
+
+  ui->colorlist_refresh_idle_id = 0;
+  lc_settings_ui_colorlist_refresh (ui);
+
+  return G_SOURCE_REMOVE;
+}
+
 static void
 lc_settings_ui_on_colorlist_map (GtkWidget *widget, gpointer user_data)
 {
+  LcSettingsUi *ui = user_data;
+
   (void) widget;
 
-  lc_settings_ui_colorlist_refresh (user_data);
+  /* Coalesce: "map" fires again on every re-map, and a pending refresh
+   * already covers the newer state. */
+  if (ui->colorlist_refresh_idle_id != 0)
+    return;
+
+  ui->colorlist_refresh_idle_id =
+    g_idle_add (lc_settings_ui_colorlist_refresh_idle, ui);
 }
 
 static void
@@ -446,6 +487,12 @@ lc_settings_ui_on_box_destroy (GtkWidget *box, gpointer user_data)
   LcSettingsUi *ui = user_data;
 
   (void) box;
+
+  if (ui->colorlist_refresh_idle_id != 0)
+    {
+      g_source_remove (ui->colorlist_refresh_idle_id);
+      ui->colorlist_refresh_idle_id = 0;
+    }
 
   /* `ui->channel` is disconnected explicitly because it is NOT a child
    * of `box` — it is borrowed from the caller (main.c) and outlives

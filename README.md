@@ -69,7 +69,7 @@ Enabling means adding the module to your session's GTK module list, which persis
 
 ### Settings application (recommended)
 
-![The settings window: an enable switch, a hint that the panel needs restarting, a Restart Panel button, and a stored-colours section whose cleanup button is greyed out because the window list is unavailable](docs/images/settings-window.png)
+![The settings window: an enable switch, a Restart Panel button, and the stored window colours listed by their current titles, each with a Remove button](docs/images/settings-window.png)
 
 Open **Settings Manager → Window Button Colors**, or run `xfce4-window-button-colors-settings` directly.
 
@@ -81,7 +81,7 @@ Open **Settings Manager → Window Button Colors**, or run `xfce4-window-button-
 
 **Always disable through this application.** It edits the existing `/Gtk/Modules` value in place and leaves every other entry untouched, which a blind key reset does not — see the alternative below.
 
-The screenshot above shows the app being deliberately cautious: it could not read the window list reliably, so it says so and greys out **Clear orphaned entries** rather than showing an empty list. An empty list would read as "you have no colours", and acting on that would delete colours you still want.
+If the window list cannot be read reliably, the app says so and greys out **Clean Up Orphaned Entries** instead of showing an empty list. An empty list would read as "you have no colours", and acting on that would delete colours you still want.
 
 ### Alternative: `xfconf-query` directly
 

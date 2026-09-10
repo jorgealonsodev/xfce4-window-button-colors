@@ -1,3 +1,14 @@
+xfce4-window-button-colors (0.2.1) unstable; urgency=medium
+
+  * Fix the stored-colour list never appearing. The settings window probed
+    the window manager's client list synchronously from its "map" handler,
+    at which point the window is mapped but the WM has not yet processed
+    it, so the completeness probe correctly judged the snapshot incomplete
+    and nothing ever retried. The probe now runs one main-loop iteration
+    later.
+
+ -- Jorge Alonso <desarrollos@enfoquestic.com>  Thu, 10 Sep 2026 19:00:00 +0000
+
 xfce4-window-button-colors (0.2.0) unstable; urgency=medium
 
   * Adds the xfce4-window-button-colors-settings binary: a standalone

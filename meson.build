@@ -1,6 +1,6 @@
 project(
   'xfce4-window-button-colors', 'c',
-  version: '0.2.0',
+  version: '0.2.1',
   license: 'GPL-2.0-or-later',
   default_options: [
     'c_std=c11',
