@@ -21,7 +21,7 @@ jobs:
             libxfce4panel-2.0-dev libxfce4util-dev libxfconf-0-dev
 
       - name: Configure
-        run: meson setup build -Dwarning_level=2 -Werror=true
+        run: meson setup build -Dwarning_level=2 -Dwerror=true
 
       - name: Build
         run: meson compile -C build
@@ -55,7 +55,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            debhelper devscripts fakeroot lintian \
+            build-essential debhelper devscripts fakeroot lintian \
             meson ninja-build pkg-config gcc gettext \
             libglib2.0-dev libgtk-3-dev libwnck-3-dev \
             libxfce4panel-2.0-dev libxfce4util-dev libxfconf-0-dev
