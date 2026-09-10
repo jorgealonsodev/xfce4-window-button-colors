@@ -123,26 +123,26 @@ function that does not split cleanly.
 
 ## Phase 6 — Slice 6: `lc-winlist` pure core (new — closes a spec/design gap)
 
-- [ ] 6.1 RED: `tests/test-winlist.c` — given stored XIDs and a synthetic (non-wnck) snapshot of `{xid, title}` pairs with `snapshot_ok == TRUE`, the built row list contains exactly the live entries with their current titles and none for a closed window (stored-color-management "Orphaned entry never appears as a row", "Row shows the current title").
-- [ ] 6.2 RED: same — `snapshot_ok == FALSE` (unobtainable or obtained-empty) ⇒ no entry is marked orphaned and none is presented as live; the result signals an "unavailable" state, never an empty list (stored-color-management "List never marks entries as orphaned under an ambiguous snapshot").
-- [ ] 6.3 GREEN: `src/core/lc-winlist.{c,h}` — pure join of `lc_winstore_xids()` output against a caller-supplied snapshot struct, reusing `lc_winstore_reconcile()`'s `snapshot_ok` semantics; no wnck symbol.
-- [ ] 6.4 Wire `tests/meson.build`: add the `test-winlist` executable and `test()`, `lc_core_dep` only.
-- [ ] 6.5 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
+- [x] 6.1 RED: `tests/test-winlist.c` — given stored XIDs and a synthetic (non-wnck) snapshot of `{xid, title}` pairs with `snapshot_ok == TRUE`, the built row list contains exactly the live entries with their current titles and none for a closed window (stored-color-management "Orphaned entry never appears as a row", "Row shows the current title").
+- [x] 6.2 RED: same — `snapshot_ok == FALSE` (unobtainable or obtained-empty) ⇒ no entry is marked orphaned and none is presented as live; the result signals an "unavailable" state, never an empty list (stored-color-management "List never marks entries as orphaned under an ambiguous snapshot").
+- [x] 6.3 GREEN: `src/core/lc-winlist.{c,h}` — pure join of `lc_winstore_xids()` output against a caller-supplied snapshot struct, reusing `lc_winstore_reconcile()`'s `snapshot_ok` semantics; no wnck symbol.
+- [x] 6.4 Wire `tests/meson.build`: add the `test-winlist` executable and `test()`, `lc_core_dep` only.
+- [x] 6.5 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
 
 ## Phase 7 — Slice 7: `lc-winlist` glue and the colour-list UI
 
-- [ ] 7.1 Create `src/settings/lc-winlist.{c,h}` — `GtkWidget::map`-gated `wnck_screen_force_update()`, self-XID completeness probe (D2), `snapshot_ok` determination, calling into `src/core/lc-winlist.c`'s pure join (D3).
-- [ ] 7.2 Extend `src/settings/lc-settings-ui.c` — colour-list rows, single-entry removal (`lc_winstore_unset()` + `lc_winstore_save()`), bulk orphan cleanup calling `lc_winstore_reconcile()` unchanged with save-iff-dropped-greater-than-zero (stored-color-management "Removing one entry leaves the rest intact", "Cleanup removes only confirmed orphans", "Cleanup is idempotent on a stable, valid snapshot").
-- [ ] 7.3 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; `src/glue/module.c` (read-only) shows zero changes (settings-app-shell "module.c Untouched").
+- [x] 7.1 Create `src/settings/lc-winlist-wnck.{c,h}` — `GtkWidget::map`-gated `wnck_screen_force_update()`, self-XID completeness probe (D2), `snapshot_ok` determination, calling into `src/core/lc-winlist.c`'s pure join (D3). (Named `lc-winlist-wnck.{c,h}`, not the literal `lc-winlist.{c,h}` this line names, to match design.md's own File Changes table and the filename slice 6's `lc-winlist.h` header comment already cites for this exact file — see the apply report's Deviations section.)
+- [x] 7.2 Extend `src/settings/lc-settings-ui.c` — colour-list rows, single-entry removal (`lc_winstore_unset()` + `lc_winstore_save()`), bulk orphan cleanup calling `lc_winstore_reconcile()` unchanged with save-iff-dropped-greater-than-zero (stored-color-management "Removing one entry leaves the rest intact", "Cleanup removes only confirmed orphans", "Cleanup is idempotent on a stable, valid snapshot").
+- [x] 7.3 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; `src/glue/module.c` (read-only) shows zero changes (settings-app-shell "module.c Untouched").
 
 ## Phase 8 — Slice 8: i18n and docs
 
-- [ ] 8.1 Mark every new user-facing string (toggle label, restart confirm/error dialogs, colour-list labels, cleanup report) for gettext extraction; regenerate `po/xfce4-window-button-colors.pot`.
-- [ ] 8.2 Add the new `msgid` entries to `po/es.po`.
-- [ ] 8.3 Edit `README.md` — make the settings application the primary activation route; demote the `xfconf-query`/`xfce4-panel -r` commands (`README.md:20-24`) to an alternative section.
-- [ ] 8.4 Fix `README.md:72` — the documented `xfconf-query -c xsettings -p /Gtk/Modules -r` reset command deletes a third-party module's autoload when the key lists others (D1); replace it with the settings app's disable action as the ordinary path. `README.md:113`'s identical command stays unchanged there — that one is the correct TTY recovery instruction.
-- [ ] 8.5 Create `docs/manual-verification.md` — consolidate the manual scenarios from Phases 4, 5, 7 and settings-app-shell's manual scenarios (launch while disabled/enabled, Settings Manager entry visible, lintian-clean) into one live checklist.
-- [ ] 8.6 Verify: `meson test -C build` including the `es_ES.UTF-8` re-run; `msgfmt --statistics` shows no missing entries in `es.po` against the `.pot`; `dpkg-buildpackage -us -uc -b && lintian` clean.
+- [x] 8.1 Mark every new user-facing string (toggle label, restart confirm/error dialogs, colour-list labels, cleanup report) for gettext extraction; regenerate `po/xfce4-window-button-colors.pot`. (All strings were already `_()`-wrapped from Phases 4/5/7; the actual gap was `po/POTFILES.in`'s `[type: gettext/desktop]` line, which is an intltool convention this system's `xgettext` 0.21 does not understand for its `-f` listfile — it auto-detects `.desktop.in` as the `Desktop` language from the filename alone. Fixed to a plain path; see Issues Found.)
+- [x] 8.2 Add the new `msgid` entries to `po/es.po`.
+- [x] 8.3 Edit `README.md` — make the settings application the primary activation route; demote the `xfconf-query`/`xfce4-panel -r` commands (`README.md:20-24`) to an alternative section.
+- [x] 8.4 Fix `README.md:72` — the documented `xfconf-query -c xsettings -p /Gtk/Modules -r` reset command deletes a third-party module's autoload when the key lists others (D1); replace it with the settings app's disable action as the ordinary path. `README.md:113`'s identical command stays unchanged there — that one is the correct TTY recovery instruction.
+- [x] 8.5 Create `docs/manual-verification.md` — consolidate the manual scenarios from Phases 4, 5, 7 and settings-app-shell's manual scenarios (launch while disabled/enabled, Settings Manager entry visible, lintian-clean) into one live checklist.
+- [x] 8.6 Verify: `meson test -C build` including the `es_ES.UTF-8` re-run; `msgfmt --statistics` shows no missing entries in `es.po` against the `.pot`; `dpkg-buildpackage -us -uc -b && lintian` clean.
 
 ## Key Learnings
 

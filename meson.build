@@ -33,6 +33,7 @@ lc_core_sources = files(
   'src/core/lc-winstore.c',
   'src/core/lc-restart.c',
   'src/core/lc-autoload.c',
+  'src/core/lc-winlist.c',
 )
 
 lc_core = static_library(
@@ -115,6 +116,7 @@ lc_settings_sources = files(
   'src/settings/main.c',
   'src/settings/lc-autoload-xfconf.c',
   'src/settings/lc-settings-ui.c',
+  'src/settings/lc-winlist-wnck.c',
 )
 
 lc_settings_c_args = [
