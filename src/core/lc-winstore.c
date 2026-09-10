@@ -156,6 +156,34 @@ lc_winstore_size (const LcWinStore *store)
   return store->entries->len;
 }
 
+gulong *
+lc_winstore_xids (const LcWinStore *store, gsize *out_n)
+{
+  gulong *xids;
+  guint i;
+
+  g_return_val_if_fail (store != NULL, NULL);
+  g_return_val_if_fail (out_n != NULL, NULL);
+
+  /* g_new0() with a zero count is free to return NULL, the same way
+   * g_malloc(0) may; this function's contract is "never NULL", so at
+   * least one element is always allocated even when the store itself is
+   * empty. Callers must rely on *out_n, never on the pointer, to detect
+   * an empty result. */
+  xids = g_new0 (gulong, store->entries->len > 0 ? store->entries->len : 1);
+
+  for (i = 0; i < store->entries->len; i++)
+    {
+      LcWinStoreEntry *entry = g_ptr_array_index (store->entries, i);
+
+      xids[i] = entry->xid;
+    }
+
+  *out_n = store->entries->len;
+
+  return xids;
+}
+
 guint
 lc_winstore_reconcile (LcWinStore *store, gboolean live_list_obtained,
                         const gulong *live_xids, gsize n_live)

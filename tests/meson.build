@@ -43,3 +43,10 @@ test_winstore = executable(
   dependencies: [lc_core_dep],
 )
 test('winstore', test_winstore)
+
+test_restart = executable(
+  'test-restart',
+  'test-restart.c',
+  dependencies: [lc_core_dep],
+)
+test('restart', test_restart)

@@ -67,12 +67,12 @@ function that does not split cleanly.
 
 ## Phase 1 — Slice 1: `lc-restart` + `lc_winstore_xids()`
 
-- [ ] 1.1 RED: `tests/test-restart.c` — exactly 3 elements, `NULL`-terminated, `[0] == "xfce4-panel"`, `[1] == "-r"`, no element is `sh`/`-c` or a shell metacharacter.
-- [ ] 1.2 GREEN: `src/core/lc-restart.{c,h}` — `lc_restart_panel_argv()` (D4).
-- [ ] 1.3 RED: extend `tests/test-winstore.c` — `lc_winstore_xids()` on an empty store returns an empty array with `*out_n == 0`; order is stable; the result feeds `lc_winstore_reconcile()` unchanged (D7).
-- [ ] 1.4 GREEN: `src/core/lc-winstore.{c,h}` — additive `lc_winstore_xids()` only, no other change to the file.
-- [ ] 1.5 Wire `tests/meson.build`: add the `test-restart` executable and `test()`.
-- [ ] 1.6 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still zero `gtk_`/`xfconf_`/`wnck_`.
+- [x] 1.1 RED: `tests/test-restart.c` — exactly 3 elements, `NULL`-terminated, `[0] == "xfce4-panel"`, `[1] == "-r"`, no element is `sh`/`-c` or a shell metacharacter.
+- [x] 1.2 GREEN: `src/core/lc-restart.{c,h}` — `lc_restart_panel_argv()` (D4).
+- [x] 1.3 RED: extend `tests/test-winstore.c` — `lc_winstore_xids()` on an empty store returns an empty array with `*out_n == 0`; order is stable; the result feeds `lc_winstore_reconcile()` unchanged (D7).
+- [x] 1.4 GREEN: `src/core/lc-winstore.{c,h}` — additive `lc_winstore_xids()` only, no other change to the file.
+- [x] 1.5 Wire `tests/meson.build`: add the `test-restart` executable and `test()`.
+- [x] 1.6 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still zero `gtk_`/`xfconf_`/`wnck_`.
 
 ## Phase 2 — Slice 2: `lc-autoload` pure transforms
 
