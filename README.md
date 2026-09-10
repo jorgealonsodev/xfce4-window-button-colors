@@ -8,7 +8,7 @@ Four VS Code windows in the XFCE panel look like four identical icons. This give
 
 It is a GTK 3 module loaded in-process by `xfce4-panel`. It adds a **Background colour** item to the right-click menu of any window button, and paints that button's background. Nothing else on the panel is touched.
 
-> **Scope of v0.1.0.** Colours are per window, and they survive a panel restart. They do **not** survive restarting the application itself — see [Why colours reset](#why-colours-reset-when-an-app-restarts).
+> **Scope.** Colours are per window and survive a panel restart. They do **not** survive restarting the application itself — see [Why colours reset](#why-colours-reset-when-an-app-restarts).
 
 ## Quick path
 
@@ -21,6 +21,8 @@ It is a GTK 3 module loaded in-process by `xfce4-panel`. It adds a **Background 
 3. Right-click any window button in the panel → **Background colour** → pick one.
 
 The button should be painted immediately. If it is not, see [Troubleshooting](#troubleshooting).
+
+Step 2 has its own window — see [Settings application](#settings-application-recommended) for a picture of it and what each control does.
 
 Prefer the command line, or need to script this? See [Enabling and disabling](#enabling-and-disabling) for the equivalent `xfconf-query` commands.
 
@@ -48,7 +50,7 @@ A colour is bound to the **X window id**, which is the only thing that identifie
 
 The alternative would be binding to the application instead of the window, which persists forever but paints *every* window of that application the same colour — which is exactly the problem this tool exists to solve. The window title is not an anchor either, since it changes as you work.
 
-Rules of the shape *"windows of app X whose title contains Y always get colour Z"* are a possible future addition, not part of v0.1.0.
+Rules of the shape *"windows of app X whose title contains Y always get colour Z"* are a possible future addition, not part of this release.
 
 ## Configuration
 
@@ -67,7 +69,19 @@ Enabling means adding the module to your session's GTK module list, which persis
 
 ### Settings application (recommended)
 
-Open **Settings Manager → Window Button Colors**, or run `xfce4-window-button-colors-settings` directly. Toggle **Enable window button colours** on or off, then click **Restart Panel** to apply the change — the toggle itself never restarts the panel. Always use this path to disable the module: it edits the existing `/Gtk/Modules` value in place and leaves every other entry untouched, which is not true of a blind key reset (see below).
+![The settings window: an enable switch, a hint that the panel needs restarting, a Restart Panel button, and a stored-colours section whose cleanup button is greyed out because the window list is unavailable](docs/images/settings-window.png)
+
+Open **Settings Manager → Window Button Colors**, or run `xfce4-window-button-colors-settings` directly.
+
+| Control | What it does |
+|---------|--------------|
+| **Enable window button colours** | Writes or removes the module in `/Gtk/Modules`. Never restarts the panel by itself. |
+| **Restart Panel** | Applies the change, after a confirmation that shows you the recovery command first. |
+| **Stored window colours** | Your coloured windows, by current title. Remove one, or clear the ones whose windows are gone. |
+
+**Always disable through this application.** It edits the existing `/Gtk/Modules` value in place and leaves every other entry untouched, which a blind key reset does not — see the alternative below.
+
+The screenshot above shows the app being deliberately cautious: it could not read the window list reliably, so it says so and greys out **Clear orphaned entries** rather than showing an empty list. An empty list would read as "you have no colours", and acting on that would delete colours you still want.
 
 ### Alternative: `xfconf-query` directly
 
@@ -90,14 +104,13 @@ GTK_MODULES=xfce4-window-button-colors xfce4-panel &
 
 ## Requirements
 
-`xfce4-panel` 4.16 or newer, GTK 3.22+, GLib 2.56+, libwnck 3. Tested on XFCE 4.18.4.
+`xfce4-panel` 4.16 or newer, GTK 3.22+, GLib 2.56+, libwnck 3, xfconf 4.12+. Tested on XFCE 4.18.4.
 
 ## Building from source
 
 ```sh
-sudo apt-get install meson ninja-build pkg-config gcc \
-  libglib2.0-dev libgtk-3-dev libwnck-3-dev \
-  libxfce4panel-2.0-dev libxfce4util-dev libxfconf-0-dev
+sudo apt-get install build-essential meson ninja-build pkg-config gettext \
+  libglib2.0-dev libgtk-3-dev libwnck-3-dev libxfconf-0-dev
 
 meson setup build
 meson compile -C build
