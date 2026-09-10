@@ -1,5 +1,5 @@
 project(
-  'xfce4-launcher-colors', 'c',
+  'xfce4-window-button-colors', 'c',
   version: '0.1.0',
   license: 'GPL-2.0-or-later',
   default_options: [
@@ -76,7 +76,7 @@ lc_glue_sources = files(
 gtk3_module_dir = gtk3_dep.get_variable(pkgconfig: 'libdir') / 'gtk-3.0' / 'modules'
 
 lc_module = shared_module(
-  'xfce4-launcher-colors',
+  'xfce4-window-button-colors',
   lc_glue_sources,
   dependencies: [lc_core_dep, gtk3_dep, gmodule_dep],
   c_args: ['-DLC_PROVIDER_PRIORITY=' + lc_provider_priority_define],

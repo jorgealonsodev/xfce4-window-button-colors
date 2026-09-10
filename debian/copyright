@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: xfce4-launcher-colors
-Source: https://github.com/jorgealonsodev/xfce4-launcher-colors
+Upstream-Name: xfce4-window-button-colors
+Source: https://github.com/jorgealonsodev/xfce4-window-button-colors
 
 Files: *
 Copyright: 2026 Jorge Alonso <desarrollos@enfoquestic.com>

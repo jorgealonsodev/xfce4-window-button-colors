@@ -20,5 +20,5 @@ spike/out/live-*.png
 debian/.debhelper/
 debian/files
 debian/*.substvars
-debian/xfce4-launcher-colors/
+debian/xfce4-window-button-colors/
 obj-*/

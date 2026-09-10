@@ -101,7 +101,7 @@ test_store_load_missing_file_degrades_to_empty_store_with_one_warning (void)
 static void
 test_store_load_unreadable_file_degrades_to_empty_store_with_one_warning (void)
 {
-  gchar *path = write_temp_css ("/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n");
+  gchar *path = write_temp_css ("/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n");
   LcStore *store;
 
   g_assert_cmpint (g_chmod (path, 0000), ==, 0);
@@ -188,7 +188,7 @@ test_store_load_well_formed_file_parses_entries (void)
   gchar *record_a = build_record (12, "a3f1c8", "#e91e8cd9", &style);
   gchar *record_b = build_record (7, "1a2b3c", "#3355ff80", &style);
   gchar *content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "%s\n"
     "%s\n",
@@ -254,7 +254,7 @@ test_store_load_render_reproduces_marker_and_rule_triplet (void)
   LcStyle style = { .corner_radius = 6, .margin = 2 };
   gchar *record = build_record (12, "a3f1c8", "#e91e8cd9", &style);
   gchar *content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "%s\n",
     record);
@@ -326,7 +326,7 @@ test_store_load_record_with_mismatched_id_is_skipped_whole (void)
   bad_rule = lc_css_rule_new (bad_selector, &bad_color, &style);
 
   content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "/* id=12 fp=a3f1c8 */\n"
     "%s\n"
@@ -398,7 +398,7 @@ test_store_load_state_rule_with_extra_declaration_is_skipped_whole (void)
     "}\n";
   gchar *good_record = build_record (7, "1a2b3c", "#3355ff80", &style);
   gchar *content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "/* id=20 fp=deadbe */\n"
     "%s"
@@ -437,7 +437,7 @@ test_store_load_state_rule_with_background_image_is_skipped_whole (void)
     "}\n";
   gchar *good_record = build_record (7, "1a2b3c", "#3355ff80", &style);
   gchar *content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "/* id=21 fp=deadbe */\n"
     "%s"
@@ -478,7 +478,7 @@ test_store_load_fourth_state_rule_parses_fine (void)
     "  background-color: rgba(10,20,30,0.40);\n"
     "}\n";
   gchar *content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "%s"
     "%s\n",
@@ -511,7 +511,7 @@ test_store_load_state_rule_with_mismatched_id_is_skipped_whole (void)
     "}\n";
   gchar *good_record = build_record (7, "1a2b3c", "#3355ff80", &style);
   gchar *content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "/* id=23 fp=deadbe */\n"
     "%s"
@@ -544,7 +544,7 @@ test_store_load_render_round_trips_byte_identically (void)
   gchar *record_a = build_record (12, "a3f1c8", "#e91e8cd9", &style);
   gchar *record_b = build_record (7, "1a2b3c", "#3355ff80", &style);
   gchar *content = g_strdup_printf (
-    "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n"
+    "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n"
     "\n"
     "%s\n"
     "%s\n",

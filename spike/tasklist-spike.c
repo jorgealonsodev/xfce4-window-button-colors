@@ -230,7 +230,7 @@ pick_from_screen (GtkWidget *anchor, GdkRGBA *out)
     {
       g_signal_handler_disconnect (anchor, handler);
       if (cur) g_object_unref (cur);
-      g_warning ("xfce4-launcher-colors: could not grab the pointer to pick a colour");
+      g_warning ("xfce4-window-button-colors: could not grab the pointer to pick a colour");
       return FALSE;
     }
 
@@ -257,7 +257,7 @@ pick_from_screen (GtkWidget *anchor, GdkRGBA *out)
           got = TRUE;
         }
       else
-        g_warning ("xfce4-launcher-colors: could not read the pixel at %d,%d", p.x, p.y);
+        g_warning ("xfce4-window-button-colors: could not read the pixel at %d,%d", p.x, p.y);
     }
   return got;
 }

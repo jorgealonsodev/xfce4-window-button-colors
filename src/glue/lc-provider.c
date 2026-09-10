@@ -30,7 +30,7 @@ lc_provider_attach (GdkScreen *screen, const LcDocument *doc)
 
   if (screen == NULL)
     {
-      g_warning ("xfce4-launcher-colors: no default screen available, "
+      g_warning ("xfce4-window-button-colors: no default screen available, "
                  "cannot attach the colour provider");
       return;
     }
@@ -44,7 +44,7 @@ lc_provider_attach (GdkScreen *screen, const LcDocument *doc)
        * the rule set with one warning and is never propagated. Whatever
        * was attached before (possibly nothing) is left exactly as it
        * was. */
-      g_warning ("xfce4-launcher-colors: discarding colour rules, "
+      g_warning ("xfce4-window-button-colors: discarding colour rules, "
                  "CSS parse failed: %s",
                  error != NULL ? error->message : "(unknown error)");
       g_clear_error (&error);

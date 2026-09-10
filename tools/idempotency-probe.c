@@ -12,7 +12,7 @@
  *
  * Usage:
  *   HOME=/some/temp/xdg/home \
- *   ./idempotency-probe /abs/path/to/libxfce4-launcher-colors.so
+ *   ./idempotency-probe /abs/path/to/libxfce4-window-button-colors.so
  *
  * Always runs with prgname forced to "xfce4-panel" (the guard is not
  * what this probe is about — 3.6's guard-inert proof covers that

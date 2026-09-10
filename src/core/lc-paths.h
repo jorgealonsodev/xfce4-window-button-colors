@@ -14,19 +14,19 @@
 
 G_BEGIN_DECLS
 
-/* Returns a newly allocated path to "$HOME/.config/xfce4-launcher-colors".
+/* Returns a newly allocated path to "$HOME/.config/xfce4-window-button-colors".
  * Returns NULL and emits exactly one g_warning() when $HOME is unset or
  * empty. Caller owns the returned string (g_free). */
 gchar *lc_paths_config_dir (void);
 
 /* Returns a newly allocated path to
- * "$HOME/.config/xfce4-launcher-colors/colors.css".
+ * "$HOME/.config/xfce4-window-button-colors/colors.css".
  * Returns NULL (via lc_paths_config_dir(), one g_warning) when $HOME is
  * unset or empty. Caller owns the returned string (g_free). */
 gchar *lc_paths_colors_css (void);
 
 /* Returns a newly allocated path to
- * "$HOME/.config/xfce4-launcher-colors/settings.ini".
+ * "$HOME/.config/xfce4-window-button-colors/settings.ini".
  * Returns NULL (via lc_paths_config_dir(), one g_warning) when $HOME is
  * unset or empty. Caller owns the returned string (g_free). */
 gchar *lc_paths_settings_ini (void);

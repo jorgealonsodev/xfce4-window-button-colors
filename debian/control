@@ -1,4 +1,4 @@
-Source: xfce4-launcher-colors
+Source: xfce4-window-button-colors
 Section: xfce
 Priority: optional
 Maintainer: Jorge Alonso <desarrollos@enfoquestic.com>
@@ -10,9 +10,9 @@ Build-Depends: debhelper-compat (= 13),
                libgtk-3-dev (>= 3.22)
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
-Homepage: https://github.com/jorgealonsodev/xfce4-launcher-colors
+Homepage: https://github.com/jorgealonsodev/xfce4-window-button-colors
 
-Package: xfce4-launcher-colors
+Package: xfce4-window-button-colors
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},

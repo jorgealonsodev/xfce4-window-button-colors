@@ -13,7 +13,7 @@
  * Usage (see docs/HANDOFF.md's testing section for the live-panel
  * equivalent, which this intentionally does NOT run):
  *
- *   GTK_MODULES=/abs/path/to/build/libxfce4-launcher-colors.so \
+ *   GTK_MODULES=/abs/path/to/build/libxfce4-window-button-colors.so \
  *   HOME=/some/temp/xdg/home \
  *   ./harness-app [prgname] [launcher-id]
  *

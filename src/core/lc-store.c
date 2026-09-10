@@ -36,7 +36,7 @@ struct _LcDocument
  * look like a schema=2 colors.css document" before attempting the
  * record parse: content that lacks it is treated as malformed. */
 static const gchar *LC_STORE_BANNER =
-  "/* xfce4-launcher-colors — generated file, do not edit by hand. schema=2 */\n";
+  "/* xfce4-window-button-colors — generated file, do not edit by hand. schema=2 */\n";
 
 static void
 lc_store_entry_free (gpointer data)

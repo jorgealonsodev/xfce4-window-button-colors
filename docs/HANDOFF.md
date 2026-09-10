@@ -71,7 +71,7 @@ That last one matters more than it looks: getting the direction backwards means 
 
 ## Next step
 
-**Phase 3 (Slice 3, H1-a): Module Entry and Load Path** — tasks 3.1 to 3.6 in `openspec/changes/xfce4-launcher-colors/tasks.md`.
+**Phase 3 (Slice 3, H1-a): Module Entry and Load Path** — tasks 3.1 to 3.6 in `openspec/changes/xfce4-window-button-colors/tasks.md`.
 
 It was started and deliberately stopped before writing any file, so the tree is clean and it can be restarted from scratch. Its runtime attempt is settled as `interrupted`.
 
