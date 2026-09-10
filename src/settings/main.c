@@ -4,20 +4,22 @@
  * in the state the user must escape (module disabled in /Gtk/Modules)
  * and its own failures can never abort the panel.
  *
- * This is Phase 4's shell only: GtkApplication bootstrap, gettext
- * domain binding, and a bare window. The toggle row, the restart
- * action, and the colour list are Phase 5 onward (design.md D1/D4/D5,
- * tasks.md Phase 5+) — nothing here reads or writes xfconf yet, and
- * lc-autoload-xfconf.c's backend is not wired to any widget in this
- * slice.
+ * Phase 4 built the bare shell; Phase 5 (design.md D1/D4/D5) adds the
+ * xfconf channel this process owns for its whole lifetime and embeds
+ * lc-settings-ui.c's toggle row and restart action into the window.
+ * The colour list is Phase 7.
  *
- * Links gtk, gio and glib — this is src/settings/, where GTK, xfconf
- * and libwnck are allowed to appear (design.md "Technical Approach";
- * src/core/ must never see any of them, which CI enforces by scanning
- * liblc-core.a for undefined gtk_/xfconf_/wnck_ symbols).
+ * Links gtk, gio, xfconf and glib — this is src/settings/, where GTK,
+ * xfconf and libwnck are allowed to appear (design.md "Technical
+ * Approach"; src/core/ must never see any of them, which CI enforces
+ * by scanning liblc-core.a for undefined gtk_/xfconf_/wnck_ symbols).
  */
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
+#include <xfconf/xfconf.h>
+
+#include "lc-autoload-xfconf.h"
+#include "lc-settings-ui.h"
 
 /* Reverse-DNS GApplication id. Does not need to match any D-Bus service
  * this project ships today — GtkApplication requires a well-formed id
@@ -27,16 +29,21 @@
 static void
 activate (GtkApplication *app, gpointer user_data)
 {
+  XfconfChannel *channel = user_data;
   GtkWidget *window;
+  GtkWidget *ui;
 
-  (void) user_data;
-
-  /* Phase 4 shell: a plain, empty window. Phase 5 replaces this body
-   * with lc-settings-ui.c's toggle row and restart action; Phase 7
-   * adds the colour list. */
   window = gtk_application_window_new (app);
   gtk_window_set_title (GTK_WINDOW (window), _("Window Button Colors"));
   gtk_window_set_default_size (GTK_WINDOW (window), 480, 360);
+
+  /* lc-settings-ui.c: toggle row bound to lc_autoload_is_enabled()/
+   * lc_autoload_set_enabled() via the xfconf backend, plus the
+   * separate restart action (D1/D4/D5). Phase 7 adds the colour list
+   * below this same box. */
+  ui = lc_settings_ui_new (channel);
+  gtk_container_add (GTK_CONTAINER (window), ui);
+
   gtk_widget_show_all (window);
 }
 
@@ -44,6 +51,8 @@ int
 main (int argc, char **argv)
 {
   GtkApplication *app;
+  XfconfChannel *channel;
+  GError *error = NULL;
   int status;
 
   /* Gettext domain binding, the same three-call sequence
@@ -53,6 +62,19 @@ main (int argc, char **argv)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
+
+  /* xfconf_init()/xfconf_channel_get() only ever READ /Gtk/Modules
+   * until a user actually flips the toggle in lc-settings-ui.c — this
+   * call alone never writes anything. One channel, obtained once, lives
+   * for this process's whole run and is handed to lc-settings-ui.c. */
+  if (!xfconf_init (&error))
+    {
+      g_printerr ("%s: %s\n", g_get_prgname (), error->message);
+      g_error_free (error);
+      return 1;
+    }
+
+  channel = xfconf_channel_get (LC_AUTOLOAD_XFCONF_CHANNEL);
 
   /* G_APPLICATION_DEFAULT_FLAGS replaces G_APPLICATION_FLAGS_NONE (same
    * value) starting glib 2.74; glib_dep's declared floor in meson.build
@@ -65,10 +87,13 @@ main (int argc, char **argv)
 #else
   app = gtk_application_new (LC_SETTINGS_APPLICATION_ID, G_APPLICATION_FLAGS_NONE);
 #endif
-  g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+  g_signal_connect (app, "activate", G_CALLBACK (activate), channel);
 
   status = g_application_run (G_APPLICATION (app), argc, argv);
+
   g_object_unref (app);
+  g_object_unref (channel);
+  xfconf_shutdown ();
 
   return status;
 }

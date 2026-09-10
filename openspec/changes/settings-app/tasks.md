@@ -115,11 +115,11 @@ function that does not split cleanly.
 
 ## Phase 5 — Slice 5: Toggle and restart UI
 
-- [ ] 5.1 Create `src/settings/lc-settings-ui.{c,h}` — toggle row bound to `lc_autoload_is_enabled()`/`lc_autoload_set_enabled()` via the xfconf backend (D1).
-- [ ] 5.2 Wire `XfconfChannel::property-changed` on `xsettings`, filtered to `/Gtk/Modules`, handler blocked while reflecting external state (D5) ("Toggle completes without restarting").
-- [ ] 5.3 Add the "Restart panel" action: confirmation dialog naming the `README.md:113` TTY recovery, `g_spawn_async()` with `lc_restart_panel_argv()`, `G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD` (D4) ("Restart is cancellable", "Confirmed restart applies the change").
-- [ ] 5.4 Add non-modal error surfacing on spawn failure: the `GError` message plus the literal command in a selectable label, no automatic retry (D4).
-- [ ] 5.5 Add the session-local "configuration changed since this window opened" hint; the restart action itself stays enabled regardless (D5).
+- [x] 5.1 Create `src/settings/lc-settings-ui.{c,h}` — toggle row bound to `lc_autoload_is_enabled()`/`lc_autoload_set_enabled()` via the xfconf backend (D1).
+- [x] 5.2 Wire `XfconfChannel::property-changed` on `xsettings`, filtered to `/Gtk/Modules`, handler blocked while reflecting external state (D5) ("Toggle completes without restarting").
+- [x] 5.3 Add the "Restart panel" action: confirmation dialog naming the `README.md:113` TTY recovery, `g_spawn_async()` with `lc_restart_panel_argv()`, `G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD` (D4) ("Restart is cancellable", "Confirmed restart applies the change").
+- [x] 5.4 Add non-modal error surfacing on spawn failure: the `GError` message plus the literal command in a selectable label, no automatic retry (D4).
+- [x] 5.5 Add the session-local "configuration changed since this window opened" hint; the restart action itself stays enabled regardless (D5).
 
 ## Phase 6 — Slice 6: `lc-winlist` pure core (new — closes a spec/design gap)
 

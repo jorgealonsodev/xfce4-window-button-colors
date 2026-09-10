@@ -114,6 +114,7 @@ xfconf_dep = dependency('libxfconf-0')
 lc_settings_sources = files(
   'src/settings/main.c',
   'src/settings/lc-autoload-xfconf.c',
+  'src/settings/lc-settings-ui.c',
 )
 
 lc_settings_c_args = [
