@@ -1,6 +1,6 @@
 project(
   'xfce4-window-button-colors', 'c',
-  version: '0.2.1',
+  version: '0.2.2',
   license: 'GPL-2.0-or-later',
   default_options: [
     'c_std=c11',
@@ -116,7 +116,6 @@ lc_settings_sources = files(
   'src/settings/main.c',
   'src/settings/lc-autoload-xfconf.c',
   'src/settings/lc-settings-ui.c',
-  'src/settings/lc-winlist-wnck.c',
 )
 
 lc_settings_c_args = [
@@ -124,10 +123,14 @@ lc_settings_c_args = [
   '-DLOCALEDIR="' + (get_option('prefix') / get_option('localedir')) + '"',
 ]
 
+# No wnck_dep here: the stored-colour list was the only consumer of
+# libwnck in this executable, and it has been removed (see
+# src/settings/lc-settings-ui.h). The panel module (src/glue/) still
+# links libwnck above — unaffected by this change.
 executable(
   'xfce4-window-button-colors-settings',
   lc_settings_sources,
-  dependencies: [lc_core_dep, gtk3_dep, wnck_dep, xfconf_dep],
+  dependencies: [lc_core_dep, gtk3_dep, xfconf_dep],
   c_args: lc_settings_c_args,
   install: true,
 )

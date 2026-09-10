@@ -13,8 +13,6 @@
 #include "lc-autoload.h"
 #include "lc-autoload-xfconf.h"
 #include "lc-restart.h"
-#include "lc-winlist.h"
-#include "lc-winlist-wnck.h"
 
 #include <glib/gi18n.h>
 
@@ -38,20 +36,6 @@ typedef struct
   gulong         toggle_handler_id;
   GtkWidget     *hint_label;
   gulong         property_changed_handler_id;
-
-  /* Colour list (Phase 7, design D2/D8). `store` and `colors_path` are
-   * borrowed from the caller exactly like `channel` above — see
-   * lc-settings-ui.h. `colors_path` may be NULL. */
-  LcWinStore    *store;
-  const gchar   *colors_path;
-  GtkWidget     *colorlist_rows;              /* vbox of per-entry rows */
-  GtkWidget     *colorlist_unavailable_label; /* shown instead of colorlist_rows */
-  GtkWidget     *cleanup_button;
-  gulong         colorlist_map_handler_id;
-
-  /* Pending deferred colour-list refresh; 0 when none. Cancelled on
-   * destroy so the idle can never fire against a freed LcSettingsUi. */
-  guint colorlist_refresh_idle_id;
 } LcSettingsUi;
 
 /* ---- shared error/hint surfacing --------------------------------------- */
@@ -278,207 +262,6 @@ lc_settings_ui_on_restart_clicked (GtkButton *button, gpointer user_data)
   gtk_widget_show (dialog);
 }
 
-/* ---- colour list: live rows, single removal, bulk cleanup (D2/D8) ------ */
-
-static void
-lc_settings_ui_colorlist_clear_rows (LcSettingsUi *ui)
-{
-  GList *children, *l;
-
-  children = gtk_container_get_children (GTK_CONTAINER (ui->colorlist_rows));
-  for (l = children; l != NULL; l = l->next)
-    gtk_widget_destroy (GTK_WIDGET (l->data));
-  g_list_free (children);
-}
-
-static void lc_settings_ui_colorlist_refresh (LcSettingsUi *ui);
-
-static void
-lc_settings_ui_on_remove_row_clicked (GtkButton *button, gpointer user_data)
-{
-  LcSettingsUi *ui = user_data;
-  gulong xid = (gulong) (gsize) g_object_get_data (G_OBJECT (button), "lc-winlist-xid");
-
-  /* stored-color-management "Removing one entry leaves the rest intact":
-   * lc_winstore_unset() touches only this xid's entry; every other
-   * entry is untouched by construction (it is a single hash-map-style
-   * remove, not a rebuild). Save iff something was actually removed —
-   * lc_winstore_unset() returning FALSE means there was nothing to
-   * unset (e.g. a double-click racing a previous removal), so there is
-   * nothing to persist. */
-  if (lc_winstore_unset (ui->store, xid) && ui->colors_path != NULL)
-    lc_winstore_save (ui->store, ui->colors_path);
-
-  lc_settings_ui_colorlist_refresh (ui);
-}
-
-static GtkWidget *
-lc_settings_ui_make_row (LcSettingsUi *ui, gulong xid, const gchar *title)
-{
-  GtkWidget *row = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
-  GtkWidget *label = gtk_label_new ((title != NULL && title[0] != '\0') ? title : _("(untitled window)"));
-  GtkWidget *remove_button = gtk_button_new_with_label (_("Remove"));
-
-  gtk_widget_set_halign (label, GTK_ALIGN_START);
-  gtk_widget_set_hexpand (label, TRUE);
-  gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
-  gtk_box_pack_start (GTK_BOX (row), label, TRUE, TRUE, 0);
-
-  /* gulong and gpointer are the same width on every platform this
-   * project targets (Linux x86/ARM, LP64) — the same pack/unpack shape
-   * GLib itself uses for GUINT_TO_POINTER on such platforms. Avoids a
-   * heap-allocated closure per row just to carry one integer. */
-  g_object_set_data (G_OBJECT (remove_button), "lc-winlist-xid", (gpointer) (gsize) xid);
-  g_signal_connect (remove_button, "clicked", G_CALLBACK (lc_settings_ui_on_remove_row_clicked), ui);
-  gtk_box_pack_start (GTK_BOX (row), remove_button, FALSE, FALSE, 0);
-
-  gtk_widget_show_all (row);
-
-  return row;
-}
-
-/* Recaptures a fresh wnck snapshot (D2/D3), rebuilds the row list from
- * `ui->store` against it via the pure lc_winlist_build(), and switches
- * between the row list and the "unavailable" state accordingly. Called
- * on every GtkWidget::map of `ui->colorlist_rows`'s container and after
- * every mutation this file makes to `ui->store` (single removal, bulk
- * cleanup), so the displayed rows never drift from the store's actual
- * contents. */
-static void
-lc_settings_ui_colorlist_refresh (LcSettingsUi *ui)
-{
-  GtkWidget *toplevel = gtk_widget_get_toplevel (ui->colorlist_rows);
-  LcWinlistWnckSnapshot snapshot;
-  gulong *stored_xids;
-  gsize n_stored = 0;
-  LcWinlistRow *rows = NULL;
-  gsize n_rows = 0;
-  LcWinlistStatus status;
-  gsize i;
-
-  /* Not yet attached under a real toplevel window (should not happen in
-   * practice — this is only ever invoked after the box is packed into
-   * main.c's window — but a defensive no-op here is cheaper than a
-   * crash if that ever changes). */
-  if (!GTK_IS_WINDOW (toplevel))
-    return;
-
-  snapshot = lc_winlist_wnck_capture (toplevel);
-
-  stored_xids = lc_winstore_xids (ui->store, &n_stored);
-  status = lc_winlist_build (stored_xids, n_stored, snapshot.snapshot_ok, snapshot.windows,
-                              snapshot.n_windows, &rows, &n_rows);
-  g_free (stored_xids);
-  lc_winlist_wnck_snapshot_clear (&snapshot);
-
-  lc_settings_ui_colorlist_clear_rows (ui);
-
-  if (status == LC_WINLIST_UNAVAILABLE)
-    {
-      /* stored-color-management "List never marks entries as orphaned
-       * under an ambiguous snapshot": a distinct state, never a bare
-       * empty list, which a user reads as "you have no colours"
-       * (design D2). Cleanup is disabled for the same reason cleanup
-       * itself must not run against an ambiguous snapshot. */
-      gtk_widget_hide (ui->colorlist_rows);
-      gtk_widget_show (ui->colorlist_unavailable_label);
-      gtk_widget_set_sensitive (ui->cleanup_button, FALSE);
-    }
-  else
-    {
-      gtk_widget_hide (ui->colorlist_unavailable_label);
-      gtk_widget_show (ui->colorlist_rows);
-      gtk_widget_set_sensitive (ui->cleanup_button, TRUE);
-
-      for (i = 0; i < n_rows; i++)
-        {
-          GtkWidget *row = lc_settings_ui_make_row (ui, rows[i].xid, rows[i].title);
-
-          gtk_box_pack_start (GTK_BOX (ui->colorlist_rows), row, FALSE, FALSE, 0);
-        }
-    }
-
-  lc_winlist_rows_free (rows, n_rows);
-}
-
-/* Deferred out of the "map" handler on purpose.
- *
- * D2's probe needs our own toplevel to appear in the window manager's
- * client list. Being mapped is NOT the same as being known to the window
- * manager: at the instant "map" fires, GTK has mapped the X window but
- * the WM has not yet processed it, so _NET_CLIENT_LIST does not list us
- * and libwnck cannot see us either.
- *
- * Measured on a live session with 28 other windows open: probing
- * synchronously from "map" -- on the child box or on the toplevel, both
- * were tried -- never finds our own XID, so the probe correctly concludes
- * the snapshot is incomplete and the list stays permanently unavailable,
- * because nothing retries. Deferring by a single main-loop iteration is
- * enough for the WM to catch up, after which the probe succeeds.
- *
- * This is the same shape as the module's own incident 1: libwnck work
- * that looks ready to run is not, and the fix is to let the main loop
- * turn once first. */
-static gboolean
-lc_settings_ui_colorlist_refresh_idle (gpointer user_data)
-{
-  LcSettingsUi *ui = user_data;
-
-  ui->colorlist_refresh_idle_id = 0;
-  lc_settings_ui_colorlist_refresh (ui);
-
-  return G_SOURCE_REMOVE;
-}
-
-static void
-lc_settings_ui_on_colorlist_map (GtkWidget *widget, gpointer user_data)
-{
-  LcSettingsUi *ui = user_data;
-
-  (void) widget;
-
-  /* Coalesce: "map" fires again on every re-map, and a pending refresh
-   * already covers the newer state. */
-  if (ui->colorlist_refresh_idle_id != 0)
-    return;
-
-  ui->colorlist_refresh_idle_id =
-    g_idle_add (lc_settings_ui_colorlist_refresh_idle, ui);
-}
-
-static void
-lc_settings_ui_on_cleanup_clicked (GtkButton *button, gpointer user_data)
-{
-  LcSettingsUi *ui = user_data;
-  GtkWidget *toplevel = gtk_widget_get_toplevel (GTK_WIDGET (button));
-  LcWinlistWnckSnapshot snapshot;
-  gulong *xids;
-  gsize n_xids = 0;
-  guint dropped;
-
-  snapshot = lc_winlist_wnck_capture (toplevel);
-  xids = lc_winlist_wnck_snapshot_xids (&snapshot, &n_xids);
-
-  /* lc_winstore_reconcile() called unchanged (design D2/D8 explicit
-   * requirement): `snapshot.snapshot_ok == FALSE` (unobtainable or
-   * obtained-empty) already makes it keep every entry and return 0 —
-   * this file adds no extra guard on top, mirroring the same paired
-   * rule reconcile()'s own header documents. */
-  dropped = lc_winstore_reconcile (ui->store, snapshot.snapshot_ok, xids, n_xids);
-
-  /* Paired rule: save if and only if something was actually dropped. A
-   * session that drops nothing must not rewrite the user's file or
-   * touch its mtime (stored-color-management "Cleanup is idempotent on
-   * a stable, valid snapshot"). */
-  if (dropped > 0 && ui->colors_path != NULL)
-    lc_winstore_save (ui->store, ui->colors_path);
-
-  g_free (xids);
-  lc_winlist_wnck_snapshot_clear (&snapshot);
-
-  lc_settings_ui_colorlist_refresh (ui);
-}
-
 /* ---- lifecycle ------------------------------------------------------- */
 
 static void
@@ -488,47 +271,31 @@ lc_settings_ui_on_box_destroy (GtkWidget *box, gpointer user_data)
 
   (void) box;
 
-  if (ui->colorlist_refresh_idle_id != 0)
-    {
-      g_source_remove (ui->colorlist_refresh_idle_id);
-      ui->colorlist_refresh_idle_id = 0;
-    }
-
   /* `ui->channel` is disconnected explicitly because it is NOT a child
    * of `box` — it is borrowed from the caller (main.c) and outlives
    * this widget, so its "property-changed" handler must be removed by
    * hand or it would keep calling back into this about-to-be-freed
-   * `ui` (D5). `ui->toggle` and `ui->colorlist_rows`, by contrast, ARE
-   * children of `box`: GTK's own container destruction already tears
-   * them down (and every signal handler connected to them, including
-   * ui->colorlist_map_handler_id) as part of this same gtk_widget_destroy()
-   * cascade. Calling g_signal_handler_disconnect() on either of them
-   * here would race that cascade — confirmed as a real
-   * "invalid (NULL) pointer instance" GLib-GObject-CRITICAL during
-   * Phase 7's Xvfb clean-exit verification (task 7.3) when this
-   * function tried to disconnect ui->colorlist_rows after GTK had
-   * already destroyed it. */
+   * `ui` (D5). `ui->toggle`, by contrast, IS a child of `box`: GTK's
+   * own container destruction already tears it down (and every signal
+   * handler connected to it) as part of this same gtk_widget_destroy()
+   * cascade. */
   g_signal_handler_disconnect (ui->channel, ui->property_changed_handler_id);
   g_free (ui);
 }
 
 GtkWidget *
-lc_settings_ui_new (XfconfChannel *channel, LcWinStore *store, const gchar *colors_path)
+lc_settings_ui_new (XfconfChannel *channel)
 {
   LcSettingsUi *ui;
   GtkWidget *box;
   GtkWidget *toggle_row;
   GtkWidget *label;
   GtkWidget *restart_button;
-  GtkWidget *colorlist_heading;
 
   g_return_val_if_fail (XFCONF_IS_CHANNEL (channel), gtk_box_new (GTK_ORIENTATION_VERTICAL, 0));
-  g_return_val_if_fail (store != NULL, gtk_box_new (GTK_ORIENTATION_VERTICAL, 0));
 
   ui = g_new0 (LcSettingsUi, 1);
   ui->channel = channel;
-  ui->store = store;
-  ui->colors_path = colors_path;
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 12);
   gtk_container_set_border_width (GTK_CONTAINER (box), 12);
@@ -555,28 +322,6 @@ lc_settings_ui_new (XfconfChannel *channel, LcWinStore *store, const gchar *colo
   gtk_widget_set_halign (restart_button, GTK_ALIGN_START);
   gtk_box_pack_start (GTK_BOX (box), restart_button, FALSE, FALSE, 0);
 
-  /* ---- colour list (Phase 7, design D2/D8) --------------------------- */
-  colorlist_heading = gtk_label_new (_("Stored window colours"));
-  gtk_widget_set_halign (colorlist_heading, GTK_ALIGN_START);
-  gtk_box_pack_start (GTK_BOX (box), colorlist_heading, FALSE, FALSE, 0);
-
-  ui->colorlist_rows = gtk_box_new (GTK_ORIENTATION_VERTICAL, 3);
-  gtk_box_pack_start (GTK_BOX (box), ui->colorlist_rows, FALSE, FALSE, 0);
-
-  /* Distinct "unavailable" state (design D2, stored-color-management
-   * "List never marks entries as orphaned under an ambiguous
-   * snapshot") — never a bare empty ui->colorlist_rows, which a user
-   * reads as "you have no colours". */
-  ui->colorlist_unavailable_label =
-    gtk_label_new (_("The window list is currently unavailable — nothing was changed."));
-  gtk_widget_set_halign (ui->colorlist_unavailable_label, GTK_ALIGN_START);
-  gtk_label_set_line_wrap (GTK_LABEL (ui->colorlist_unavailable_label), TRUE);
-  gtk_box_pack_start (GTK_BOX (box), ui->colorlist_unavailable_label, FALSE, FALSE, 0);
-
-  ui->cleanup_button = gtk_button_new_with_mnemonic (_("Clean Up _Orphaned Entries"));
-  gtk_widget_set_halign (ui->cleanup_button, GTK_ALIGN_START);
-  gtk_box_pack_start (GTK_BOX (box), ui->cleanup_button, FALSE, FALSE, 0);
-
   ui->toggle_handler_id = g_signal_connect (ui->toggle, "notify::active",
                                              G_CALLBACK (lc_settings_ui_on_toggle_active_notify), ui);
   /* The restart action stays enabled regardless of the hint (D5) — it
@@ -586,23 +331,10 @@ lc_settings_ui_new (XfconfChannel *channel, LcWinStore *store, const gchar *colo
   ui->property_changed_handler_id = g_signal_connect (
     channel, "property-changed", G_CALLBACK (lc_settings_ui_on_property_changed), ui);
 
-  /* D2's "the window is realized and mapped" gate: ui->colorlist_rows
-   * only ever becomes mapped once it (and its ancestors, up to the
-   * toplevel window) are shown, at which point gtk_widget_get_toplevel()
-   * from lc_settings_ui_colorlist_refresh() resolves to a window whose
-   * GdkWindow already exists — exactly what the D2 self-XID probe
-   * needs. Fires again on every later re-map (e.g. the window being
-   * hidden and shown again), which is a deliberate, cheap re-refresh,
-   * not a bug. */
-  ui->colorlist_map_handler_id =
-    g_signal_connect (ui->colorlist_rows, "map", G_CALLBACK (lc_settings_ui_on_colorlist_map), ui);
-  g_signal_connect (ui->cleanup_button, "clicked", G_CALLBACK (lc_settings_ui_on_cleanup_clicked), ui);
-
   g_signal_connect (box, "destroy", G_CALLBACK (lc_settings_ui_on_box_destroy), ui);
 
   gtk_widget_show_all (box);
   gtk_widget_hide (ui->hint_label);
-  gtk_widget_hide (ui->colorlist_unavailable_label);
 
   lc_settings_ui_refresh (ui);
 

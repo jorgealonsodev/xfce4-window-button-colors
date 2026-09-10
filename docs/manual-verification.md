@@ -30,8 +30,8 @@ disabled", and "Launch while module is enabled" scenarios.
   XFCE settings, not under a generic "Other" section).
 - [ ] **1.2 Launch while disabled.** Confirm `xfce4-window-button-colors` is absent
   from `/Gtk/Modules` (`xfconf-query -c xsettings -p /Gtk/Modules`), then launch the
-  entry from step 1.1. **Expect**: the window opens and is usable — the toggle,
-  restart button, and stored-colours section are all present and responsive.
+  entry from step 1.1. **Expect**: the window opens and is usable — the toggle
+  and restart button are both present and responsive.
 - [ ] **1.3 Launch while enabled.** With `xfce4-panel` running and the module already
   enabled (from an earlier run of this checklist, or via the toggle below), launch
   the settings application again. **Expect**: the window opens without requiring a
@@ -116,63 +116,26 @@ Covers D4's non-modal error surfacing.
   automatic retry happens. The main window and its toggle remain fully usable
   afterward.
 
-## 5. Stored-colour list — the `snapshot_ok == TRUE` branch
+## 5. Stored-colour list — WITHDRAWN
 
-Covers `stored-color-management`'s "Orphaned entry never appears as a row", "Row
-shows the current title", and the cleanup scenarios, specifically the *populated,
-enabled* branch. **Note**: Phase 7's own verification could not exercise this branch
-under Xvfb + `xfwm4` — `wnck_screen_get_windows()` returned zero windows there even
-with `_NET_CLIENT_LIST` confirmed non-empty at the X-property level. This is exactly
-why it stays manual-only; a real desktop session is required.
-
-- [ ] **5.1 Populated rows with correct titles.** With at least two real application
-  windows open (e.g. two terminal windows with different titles), colour each one
-  from its right-click menu (see [Using it](../README.md#using-it)). Open the
-  settings application. **Expect**: the "Stored window colours" section shows a
-  row per coloured window, each labelled with that window's *current* title (not a
-  stale one), and the **Clean Up Orphaned Entries** button is enabled (not greyed
-  out).
-- [ ] **5.2 Title updates live.** With the settings window still open, rename one of
-  the coloured windows (e.g. change a terminal's title via its own settings or by
-  running a command that changes it), then close and reopen the settings window (or
-  trigger a re-map, e.g. minimize/restore it). **Expect**: the row's label now shows
-  the new title.
-- [ ] **5.3 Single-entry removal leaves the rest intact.** Click **Remove** on one
-  row. **Expect**: only that row disappears; every other row is unchanged, and the
-  removed window's colour is gone from the panel button too (or would be, on the
-  next panel restart / reconciliation) while other coloured buttons are untouched.
-  Confirm `~/.config/xfce4-window-button-colors/colors.css` no longer has an entry
-  for that window's id.
-- [ ] **5.4 Orphaned entry never appears as a row.** Colour a window, then close it
-  (not just minimize). Reopen the settings application (or trigger a re-map).
-  **Expect**: no row is shown for the closed window's id — it does not appear as
-  live, and it is not shown as an error either; it is simply absent from the list.
-- [ ] **5.5 Cleanup removes only confirmed orphans.** With at least one closed
-  window's colour still in the store (from 5.4) and at least one still-open coloured
-  window, click **Clean Up Orphaned Entries**. **Expect**: the closed window's entry
-  is gone from `colors.css` afterward; the still-open window's row and its colour
-  are untouched.
-- [ ] **5.6 Cleanup is idempotent on a stable, valid snapshot.** Immediately click
-  **Clean Up Orphaned Entries** again with nothing closed in between. **Expect**: no
-  change — check `colors.css`'s mtime before and after; it must not have been
-  rewritten (nothing was dropped, so nothing is saved).
-- [ ] **5.7 Ambiguous snapshot shows the distinct "unavailable" state, never an
-  empty list.** This is hard to force deliberately (it requires the wnck snapshot
-  itself to be unobtainable or the self-XID completeness probe to fail — see D2), so
-  treat it as an opportunistic check: if you ever see the stored-colours section
-  during normal use, confirm it is *either* the row list *or* the label "The window
-  list is currently unavailable — nothing was changed" with the cleanup button
-  disabled — never a bare empty list with the cleanup button enabled, which would
-  read as "you have no colours" when the truth is "we could not check."
+**Note (2026-09-10): the stored-colour management section (the row list, per-row
+removal, and "Clean Up Orphaned Entries") has been removed from the settings
+application.** Reason: "Clean Up Orphaned Entries" caused real, reproduced data
+loss on the maintainer's own configuration (colours deleted for windows that were
+still open), and the failure was not reliably reproducible from the same fixture
+and single click, so it could not be pinned down and fixed in place. This checklist
+no longer instructs a tester to verify that section — the scenarios that used to
+live here (`stored-color-management`'s row/title/removal/cleanup scenarios) do not
+apply until the feature returns.
 
 ## 6. Locale
 
 - [ ] **6.1 Spanish strings render.** Launch the settings application under
   `LC_ALL=es_ES.UTF-8 xfce4-window-button-colors-settings` (installing the `es_ES`
   locale first if needed: `sudo locale-gen es_ES.UTF-8`). **Expect**: every string
-  from sections 1-5 above (toggle label, hint, restart dialog and its secondary
-  text, error dialogs, colour-list labels, cleanup button) appears in Spanish, with
-  no untranslated English string and no `msgid` literal shown in the UI.
+  from sections 1-4 above (toggle label, hint, restart dialog and its secondary
+  text, error dialogs) appears in Spanish, with no untranslated English string and
+  no `msgid` literal shown in the UI.
 
 ## 7. Packaging
 

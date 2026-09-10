@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Window Button Colors
-Comment=Enable or disable per-window tasklist button colours and manage stored colours
+Comment=Enable or disable per-window tasklist button colours
 Exec=xfce4-window-button-colors-settings
 Icon=preferences-desktop-theme
 Terminal=false

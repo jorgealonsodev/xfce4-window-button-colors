@@ -1,3 +1,19 @@
+xfce4-window-button-colors (0.2.2) unstable; urgency=medium
+
+  * Remove stored-colour management from the settings application (the
+    "Stored window colours" list, per-row removal, and "Clean Up Orphaned
+    Entries"). Clean Up Orphaned Entries caused real, reproduced data loss
+    on the maintainer's own configuration, deleting colours for windows
+    that were still open; the failure was not reliably reproducible from
+    the same fixture and single click, so the defect could not be pinned
+    down in the settings-app glue code. A button that sometimes destroys
+    user data must not ship, so the section is withdrawn until the cause
+    is found. The underlying reconciliation logic in src/core/ is
+    unaffected and stays in place for the panel module and for when this
+    feature returns. The settings binary no longer links libwnck.
+
+ -- Jorge Alonso <desarrollos@enfoquestic.com>  Thu, 10 Sep 2026 21:08:00 +0000
+
 xfce4-window-button-colors (0.2.1) unstable; urgency=medium
 
   * Fix the stored-colour list never appearing. The settings window probed
