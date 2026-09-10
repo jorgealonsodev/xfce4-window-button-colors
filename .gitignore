@@ -25,3 +25,4 @@ obj-*/
 
 # Editor workspace files
 *.code-workspace
+debian/debhelper-build-stamp
