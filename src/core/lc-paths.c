@@ -12,7 +12,7 @@ lc_paths_config_dir (void)
       return NULL;
     }
 
-  return g_build_filename (home, ".config", "xfce4-launcher-colors", NULL);
+  return g_build_filename (home, ".config", "xfce4-window-button-colors", NULL);
 }
 
 gchar *

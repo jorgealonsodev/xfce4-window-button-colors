@@ -1,0 +1,87 @@
+name: Release
+
+# Tag-driven: pushing v<major>.<minor>.<patch> builds, verifies, packages and
+# publishes. The tag is the single source of truth for the version, and it is
+# checked against meson.build and debian/changelog so the three cannot drift.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version from the tag
+        id: ver
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          version="${tag#v}"
+          echo "tag=$tag"         >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse to release if the version drifted
+        run: |
+          want='${{ steps.ver.outputs.version }}'
+          meson_v=$(sed -n "s/^\s*version:\s*'\([^']*\)'.*/\1/p" meson.build | head -1)
+          deb_v=$(dpkg-parsechangelog -S Version 2>/dev/null || head -1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
+          echo "tag=$want meson=$meson_v debian=$deb_v"
+          if [ "$meson_v" != "$want" ] || [ "$deb_v" != "$want" ]; then
+            echo "::error::Version mismatch. The tag, meson.build and debian/changelog must agree."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            debhelper devscripts fakeroot lintian \
+            meson ninja-build pkg-config gcc \
+            libglib2.0-dev libgtk-3-dev libwnck-3-dev \
+            libxfce4panel-2.0-dev libxfce4util-dev libxfconf-0-dev
+
+      # A release must never ship code the test suite has not passed.
+      - name: Build and test
+        run: |
+          meson setup build -Dwarning_level=2
+          meson test -C build --print-errorlogs
+
+      - name: Build the .deb
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Collect artefacts
+        run: |
+          mkdir -p dist
+          cp ../*.deb dist/
+          cd dist && sha256sum *.deb > SHA256SUMS
+
+      - name: Locate hand-written release notes
+        id: notes
+        run: |
+          f="docs/RELEASE_NOTES_${{ steps.ver.outputs.tag }}.md"
+          if [ -f "$f" ]; then echo "path=$f" >> "$GITHUB_OUTPUT"
+          else echo "path=" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          # Hand-written notes when docs/RELEASE_NOTES_<tag>.md exists,
+          # falling back to generated ones so a release is never blocked on
+          # having written them.
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.path == '' }}
+          files: |
+            dist/*.deb
+            dist/SHA256SUMS

@@ -13,7 +13,6 @@
 #include <string.h>
 #include "lc-css.h"
 #include "lc-color.h"
-#include "lc-id.h"
 
 /* Returns a newly allocated copy of the rule block starting at the first
  * occurrence of "<anchor> {" in text, up to and including its closing brace.
@@ -50,7 +49,7 @@ test_css_rule_new_renders_three_rules (void)
   gchar *rendered;
 
   g_assert_true (lc_color_parse ("#e91e8cd9", &color));
-  selector = lc_id_selector_new (13);
+  selector = g_strdup_printf ("#launcher-13 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   g_assert_nonnull (rendered);
@@ -72,7 +71,7 @@ test_css_rule_base_contains_background_image_none (void)
   gchar *base_block;
 
   g_assert_true (lc_color_parse ("#e91e8cd9", &color));
-  selector = lc_id_selector_new (13);
+  selector = g_strdup_printf ("#launcher-13 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   /* A generator that omits this on the base rule is exactly the failure
@@ -102,7 +101,7 @@ test_css_rule_geometry_appears_exactly_once_on_base (void)
   gchar *active_block;
 
   g_assert_true (lc_color_parse ("#e91e8cd9", &color));
-  selector = lc_id_selector_new (13);
+  selector = g_strdup_printf ("#launcher-13 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   hover_selector = g_strdup_printf ("%s:hover", selector);
@@ -152,7 +151,7 @@ test_css_rule_state_rules_carry_only_background_color (void)
   gchar *active_block;
 
   g_assert_true (lc_color_parse ("#e91e8cd9", &color));
-  selector = lc_id_selector_new (13);
+  selector = g_strdup_printf ("#launcher-13 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   hover_selector = g_strdup_printf ("%s:hover", selector);
@@ -196,7 +195,7 @@ test_css_rule_hover_and_active_colors_are_derived_and_distinct (void)
   gchar *expected_base_css;
 
   g_assert_true (lc_color_parse ("#e91e8cd9", &color));
-  selector = lc_id_selector_new (13);
+  selector = g_strdup_printf ("#launcher-13 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   expected_hover = lc_color_derive_state (&color, LC_STATE_HOVER);
@@ -232,7 +231,7 @@ test_css_rule_never_single_level_or_button_selector (void)
   gchar *rendered;
 
   g_assert_true (lc_color_parse ("#000000ff", &color));
-  selector = lc_id_selector_new (7);
+  selector = g_strdup_printf ("#launcher-7 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   g_assert_null (strstr (rendered, "#launcher-button"));
@@ -251,7 +250,7 @@ test_css_rule_pseudo_class_attached_to_descendant (void)
   gchar *rendered;
 
   g_assert_true (lc_color_parse ("#e91e8cd9", &color));
-  selector = lc_id_selector_new (13);
+  selector = g_strdup_printf ("#launcher-13 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   g_assert_nonnull (strstr (rendered, "#launcher-13 #launcher-arrow:hover"));
@@ -270,7 +269,7 @@ test_css_rule_pseudo_class_never_attached_to_ancestor (void)
   gchar *rendered;
 
   g_assert_true (lc_color_parse ("#e91e8cd9", &color));
-  selector = lc_id_selector_new (13);
+  selector = g_strdup_printf ("#launcher-13 #launcher-arrow");
   rendered = lc_css_rule_new (selector, &color, &style);
 
   /* GTK3 resolves a pseudo-class against the element it is attached to;

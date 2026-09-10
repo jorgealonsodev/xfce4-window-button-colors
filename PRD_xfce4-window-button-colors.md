@@ -1,4 +1,4 @@
-# PRD — xfce4-launcher-colors
+# PRD — xfce4-window-button-colors
 
 **Versión:** 1.2 · **Fecha:** 2026-09-09 · **Estado:** Validado contra fuentes upstream · spike H0 parcialmente ejecutado
 
@@ -18,11 +18,11 @@ Se distribuye como paquete `.deb` (Debian/Ubuntu/Mint/MX) y como `tar.gz` con sc
 
 | Elemento | Valor |
 |----------|-------|
-| Nombre del proyecto / repositorio | `xfce4-launcher-colors` |
-| Nombre del paquete (.deb, AUR, spec) | `xfce4-launcher-colors` |
-| Binario CLI | `xfce4-launcher-colors` |
-| Módulo GTK | `libxfce4-launcher-colors.so` |
-| Directorio de configuración | `~/.config/xfce4-launcher-colors/` |
+| Nombre del proyecto / repositorio | `xfce4-window-button-colors` |
+| Nombre del paquete (.deb, AUR, spec) | `xfce4-window-button-colors` |
+| Binario CLI | `xfce4-window-button-colors` |
+| Módulo GTK | `libxfce4-window-button-colors.so` |
+| Directorio de configuración | `~/.config/xfce4-window-button-colors/` |
 | Nombre visible en la interfaz | «Colores de lanzadores» (título de diálogos); ítems de menú «Color de fondo…» / «Quitar color» |
 
 El nombre sigue la convención de XFCE (`xfce4-<componente>-<función>`) y deja claro que actúa únicamente sobre lanzadores, no sobre otros plugins del panel.
@@ -64,7 +64,7 @@ XFCE permite colocar varios lanzadores con el mismo icono en el panel, pero no o
 | RF-7 | Ajustes de estilo: radio de esquinas (0–12 px) y margen interior, aplicables globalmente. | Should |
 | RF-8 | Al eliminar un lanzador del panel, su color se limpia del fichero de configuración (sin dejar basura). | Should |
 | RF-9 | El color se conserva al mover el lanzador de posición o de panel (el id del plugin no cambia). | Must |
-| RF-10 | Comando CLI `xfce4-launcher-colors set <id> <#rrggbbaa>` / `unset <id>` / `list` para scripting y depuración. | Could |
+| RF-10 | Comando CLI `xfce4-window-button-colors set <id> <#rrggbbaa>` / `unset <id>` / `list` para scripting y depuración. | Could |
 | RF-11 | Traducción: español e inglés en v1 (gettext), preparado para más idiomas. | Should |
 | RF-12 | Resaltar el lanzador cuya aplicación es la **ventana enfocada** en ese momento, al modo en que el plugin «botones de ventana» marca su botón activo. **Fuera del v1**: ver hito H5 y el riesgo de emparejamiento en §11. | Won't (v1) |
 
@@ -100,14 +100,14 @@ XFCE permite colocar varios lanzadores con el mismo icono en el panel, pero no o
 - **Toolkit:** GTK 3 (el que usa xfce4-panel actualmente).
 - **Bibliotecas:** `libxfce4panel-2.0`, `libxfce4util-1.0`, `xfconf-0`.
 - **Build:** Meson + Ninja (más rápido y ligero que autotools; es el estándar actual en XFCE).
-- **Persistencia:** fichero CSS propio `~/.config/xfce4-launcher-colors/colors.css` + `settings.ini` (radio, margen).
+- **Persistencia:** fichero CSS propio `~/.config/xfce4-window-button-colors/colors.css` + `settings.ini` (radio, margen).
 - **i18n:** gettext.
 
 ### 7.3 Cómo funciona (arquitectura)
 
 ```
 xfce4-panel (proceso existente)
- └── carga libxfce4-launcher-colors.so  (módulo GTK, vía XSETTINGS Gtk/Modules)
+ └── carga libxfce4-window-button-colors.so  (módulo GTK, vía XSETTINGS Gtk/Modules)
       ├── comprueba g_get_prgname() == "xfce4-panel"; en otro proceso → no hace nada y sale
       ├── al cargar: GtkCssProvider con colors.css → gtk_style_context_add_provider_for_screen()
       ├── registra UN emission hook global: g_signal_add_emission_hook(g_signal_lookup("map",
@@ -233,7 +233,7 @@ cabeceras de desarrollo.
 ```
 Color de fondo…            ← RF-1
 Quitar color               ← solo si tiene color (RF-5)
-xfce4-launcher-colors ▸
+xfce4-window-button-colors ▸
     ☑ Cargar al iniciar sesión   ← RF-6
     Ajustes de estilo…           ← RF-7
 ────────────────
@@ -251,19 +251,19 @@ Eliminar
 ## 9. Empaquetado y distribución
 
 ### 9.1 `.deb`
-- Nombre: `xfce4-launcher-colors`, arquitecturas `amd64` y `arm64`.
+- Nombre: `xfce4-window-button-colors`, arquitecturas `amd64` y `arm64`.
 - `Depends: libgtk-3-0, libxfce4panel-2.0-4, libxfce4util7, libxfconf-0-3, xfce4-panel (>= 4.16)`.
 - Ficheros:
-  - `/usr/lib/<triplet>/gtk-3.0/modules/libxfce4-launcher-colors.so`
-  - `/usr/bin/xfce4-launcher-colors` (CLI, RF-10)
-  - `/usr/share/applications/xfce4-launcher-colors.desktop` (`NoDisplay=true`, para ajustes)
+  - `/usr/lib/<triplet>/gtk-3.0/modules/libxfce4-window-button-colors.so`
+  - `/usr/bin/xfce4-window-button-colors` (CLI, RF-10)
+  - `/usr/share/applications/xfce4-window-button-colors.desktop` (`NoDisplay=true`, para ajustes)
   - `/usr/share/locale/…`
-- `postinst`: no toca la configuración del usuario. La activación es por usuario y ocurre en el primer uso o mediante `xfce4-launcher-colors --enable` (que escribe la clave xsettings y recarga el panel con `xfce4-panel -r`).
+- `postinst`: no toca la configuración del usuario. La activación es por usuario y ocurre en el primer uso o mediante `xfce4-window-button-colors --enable` (que escribe la clave xsettings y recarga el panel con `xfce4-panel -r`).
 - Firmado y apto para un PPA / repositorio propio; `debian/` compatible con `dpkg-buildpackage`.
 - Estándar Debian policy, lintian limpio.
 
 ### 9.2 `tar.gz` (otras distros)
-- `xfce4-launcher-colors-<versión>.tar.gz` con fuentes, `meson.build`, `README.md` e `install.sh`.
+- `xfce4-window-button-colors-<versión>.tar.gz` con fuentes, `meson.build`, `README.md` e `install.sh`.
 - `install.sh`: detecta el gestor de paquetes (pacman, dnf, zypper, apk, xbps) e imprime el comando para instalar dependencias de compilación; luego `meson setup build && ninja -C build && sudo ninja -C build install`. Opción `--user` para instalar en `~/.local` sin root.
 - Se aportarán como cortesía un `PKGBUILD` (AUR) y un `.spec` (Fedora/openSUSE), aunque no se mantienen como entregables oficiales.
 
@@ -302,7 +302,7 @@ No se usa `~/.config/autostart` porque no hay ningún proceso que arrancar: la �
 
 ## 13. Criterios de aceptación
 
-1. En Xubuntu 24.04 limpio, `sudo apt install ./xfce4-launcher-colors_1.0_amd64.deb && xfce4-launcher-colors --enable` → clic derecho en un lanzador muestra «Color de fondo…».
+1. En Xubuntu 24.04 limpio, `sudo apt install ./xfce4-window-button-colors_1.0_amd64.deb && xfce4-window-button-colors --enable` → clic derecho en un lanzador muestra «Color de fondo…».
 2. Elegir un color lo aplica en < 100 ms sin parpadeo del panel.
 3. Cerrar sesión y volver a entrar mantiene los colores.
 4. Desmarcar «Cargar al iniciar sesión», reiniciar sesión → panel nativo sin colores y sin ítem extra; volver a marcar → todo restaurado.

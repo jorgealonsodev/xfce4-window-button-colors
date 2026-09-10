@@ -1,12 +1,16 @@
-/* lc-document.h — opaque rendered colors.css document (design.md D16).
+/* lc-document.h — opaque rendered colors.css document.
  *
- * LcDocument has exactly one constructor: lc_store_render(), declared in
- * lc-store.h and implemented in lc-store.c, which also holds this type's
- * private definition. No "_new_from_string" or "_from_file" constructor
- * exists anywhere in the tree, and none may ever be added here:
- * LcDocument's entire reason to exist is to make it impossible to hand
- * the CSS provider (src/glue/lc-provider.c, a later slice) anything but
- * a rendered, reconciled store.
+ * LcDocument has exactly one constructor: lc_winstore_render(), declared
+ * in lc-winstore.h and implemented in lc-winstore.c, which also holds
+ * this type's private definition. No "_new_from_string" or "_from_file"
+ * constructor exists anywhere in the tree, and none may ever be added
+ * here: LcDocument's entire reason to exist is to make it impossible to
+ * hand the CSS provider (src/glue/lc-provider.c) anything but a
+ * rendered, reconciled store.
+ *
+ * (The launcher-era path had its own constructor, lc_store_render() in
+ * the now-deleted lc-store.c. That path is retired; lc_winstore_render()
+ * is the sole constructor today.)
  *
  * Links glib only.
  */

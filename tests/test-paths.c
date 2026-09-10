@@ -15,7 +15,7 @@ test_paths_config_dir_with_home_set (void)
 
   dir = lc_paths_config_dir ();
   g_assert_nonnull (dir);
-  g_assert_cmpstr (dir, ==, "/tmp/lc-test-home/.config/xfce4-launcher-colors");
+  g_assert_cmpstr (dir, ==, "/tmp/lc-test-home/.config/xfce4-window-button-colors");
   g_free (dir);
 
   if (saved_home != NULL)
@@ -35,7 +35,7 @@ test_paths_colors_css_with_home_set (void)
 
   path = lc_paths_colors_css ();
   g_assert_nonnull (path);
-  g_assert_cmpstr (path, ==, "/tmp/lc-test-home/.config/xfce4-launcher-colors/colors.css");
+  g_assert_cmpstr (path, ==, "/tmp/lc-test-home/.config/xfce4-window-button-colors/colors.css");
   g_free (path);
 
   if (saved_home != NULL)
@@ -55,7 +55,7 @@ test_paths_settings_ini_with_home_set (void)
 
   path = lc_paths_settings_ini ();
   g_assert_nonnull (path);
-  g_assert_cmpstr (path, ==, "/tmp/lc-test-home/.config/xfce4-launcher-colors/settings.ini");
+  g_assert_cmpstr (path, ==, "/tmp/lc-test-home/.config/xfce4-window-button-colors/settings.ini");
   g_free (path);
 
   if (saved_home != NULL)

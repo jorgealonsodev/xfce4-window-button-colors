@@ -10,7 +10,7 @@
  * and never touches GtkCssProvider directly.
  *
  * D16: the only input this file accepts is an opaque LcDocument *, whose
- * sole constructor is lc_store_render() (src/core/lc-store.c). There is
+ * sole constructor is lc_winstore_render() (src/core/lc-winstore.c). There is
  * no function here that takes a path or raw CSS text, so handing this
  * file `g_file_get_contents ("colors.css")` does not compile — the exact
  * bypass D16 exists to close.
