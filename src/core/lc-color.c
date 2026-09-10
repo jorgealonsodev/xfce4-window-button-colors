@@ -72,15 +72,26 @@ gchar *
 lc_color_to_css (const LcColor *color)
 {
   gdouble alpha;
+  gchar alpha_text[G_ASCII_DTOSTR_BUF_SIZE];
 
   if (color == NULL)
     return NULL;
 
   alpha = color->a / 255.0;
 
-  return g_strdup_printf ("rgba(%u,%u,%u,%.2f)",
+  /* The alpha MUST be formatted locale-independently. printf's "%f" family
+   * honours LC_NUMERIC, and gtk_init() calls setlocale(LC_ALL, ""), so in
+   * the real panel process under any comma-decimal locale (es_ES, de_DE,
+   * fr_FR, ...) "%.2f" emits "0,85". CSS requires a period, so GTK rejects
+   * the whole rule with "Expected ')' in color definition" and every colour
+   * silently fails to paint — visible only as a log warning, because the
+   * lifecycle's step-7 GError path swallows it by design (RNF-6).
+   * g_ascii_formatd always uses a period regardless of locale. */
+  g_ascii_formatd (alpha_text, sizeof alpha_text, "%.2f", alpha);
+
+  return g_strdup_printf ("rgba(%u,%u,%u,%s)",
                            (guint) color->r, (guint) color->g, (guint) color->b,
-                           alpha);
+                           alpha_text);
 }
 
 gchar *

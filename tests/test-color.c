@@ -3,7 +3,9 @@
  * for lc_color_derive_state (design.md D19).
  */
 #include <glib.h>
+#include <locale.h>
 #include <math.h>
+#include <string.h>
 #include "lc-color.h"
 
 static void
@@ -320,6 +322,45 @@ test_derive_state_explicit_extremes_pairwise_distinct (void)
     }
 }
 
+/* Regression guard: lc_color_to_css() must format alpha locale-independently.
+ *
+ * printf's "%f" family honours LC_NUMERIC, and gtk_init() calls
+ * setlocale(LC_ALL, ""), so inside the real xfce4-panel process under any
+ * comma-decimal locale this emitted "rgba(233,30,140,0,85)". GTK then
+ * rejects the entire rule ("Expected ')' in color definition") and the
+ * lifecycle's step-7 GError path discards it with only a log warning, so
+ * every colour silently fails to paint. Verified against a real
+ * GtkCssProvider before the fix. */
+static void
+test_color_to_css_alpha_is_locale_independent (void)
+{
+  static const gchar *comma_locales[] = {
+    "es_ES.UTF-8", "es_ES.utf8", "de_DE.UTF-8", "fr_FR.UTF-8", NULL
+  };
+  gchar *saved = g_strdup (setlocale (LC_NUMERIC, NULL));
+  const gchar *applied = NULL;
+  LcColor color;
+  gchar *css;
+
+  for (gsize i = 0; comma_locales[i] != NULL && applied == NULL; i++)
+    applied = setlocale (LC_NUMERIC, comma_locales[i]);
+
+  g_assert_true (lc_color_parse ("#e91e8cd9", &color));
+  css = lc_color_to_css (&color);
+
+  /* Holds under every locale, including the C fallback when no
+   * comma-decimal locale is installed on the build machine. */
+  g_assert_nonnull (css);
+  g_assert_cmpstr (css, ==, "rgba(233,30,140,0.85)");
+
+  g_free (css);
+  setlocale (LC_NUMERIC, saved);
+  g_free (saved);
+
+  if (applied == NULL)
+    g_test_message ("no comma-decimal locale installed; assertion still held under C");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -336,6 +377,8 @@ main (int argc, char **argv)
   g_test_add_func ("/color/to-css-matches-design-example", test_color_to_css_matches_design_example);
   g_test_add_func ("/color/to-hex-null-returns-null", test_color_to_hex_null_returns_null);
   g_test_add_func ("/color/to-css-null-returns-null", test_color_to_css_null_returns_null);
+  g_test_add_func ("/color/to-css-alpha-is-locale-independent",
+                   test_color_to_css_alpha_is_locale_independent);
 
   g_test_add_func ("/color/derive-state/opaque-mid-tone-hover-lighter-active-darker",
                     test_derive_state_opaque_mid_tone_hover_lighter_active_darker);
