@@ -1,6 +1,6 @@
 project(
   'xfce4-window-button-colors', 'c',
-  version: '0.1.0',
+  version: '0.2.0',
   license: 'GPL-2.0-or-later',
   default_options: [
     'c_std=c11',
@@ -32,6 +32,8 @@ lc_core_sources = files(
   'src/core/lc-winid.c',
   'src/core/lc-winstore.c',
   'src/core/lc-restart.c',
+  'src/core/lc-autoload.c',
+  'src/core/lc-winlist.c',
 )
 
 lc_core = static_library(
@@ -101,8 +103,47 @@ lc_module = shared_module(
   install_dir: gtk3_module_dir,
 )
 
+# --- Settings application (src/settings/) ----------------------------------
+#
+# A standalone GtkApplication binary, never loaded in-process by
+# xfce4-panel, so it is reachable exactly in the state the user must
+# escape (module disabled) and its own failures cannot abort the panel
+# (design.md "Technical Approach"). xfconf enters the tree only here —
+# lc_core_dep stays glib/gio-only, unchanged.
+xfconf_dep = dependency('libxfconf-0')
+
+lc_settings_sources = files(
+  'src/settings/main.c',
+  'src/settings/lc-autoload-xfconf.c',
+  'src/settings/lc-settings-ui.c',
+  'src/settings/lc-winlist-wnck.c',
+)
+
+lc_settings_c_args = [
+  '-DGETTEXT_PACKAGE="' + gettext_package + '"',
+  '-DLOCALEDIR="' + (get_option('prefix') / get_option('localedir')) + '"',
+]
+
+executable(
+  'xfce4-window-button-colors-settings',
+  lc_settings_sources,
+  dependencies: [lc_core_dep, gtk3_dep, wnck_dep, xfconf_dep],
+  c_args: lc_settings_c_args,
+  install: true,
+)
+
 # --- Localization (po/) ----------------------------------------------------
 i18n = import('i18n')
+
+i18n.merge_file(
+  input: 'data/xfce4-window-button-colors-settings.desktop.in',
+  output: 'xfce4-window-button-colors-settings.desktop',
+  type: 'desktop',
+  po_dir: 'po',
+  install: true,
+  install_dir: get_option('datadir') / 'applications',
+)
+
 subdir('po')
 
 subdir('tests')

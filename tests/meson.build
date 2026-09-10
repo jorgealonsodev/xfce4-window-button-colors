@@ -50,3 +50,17 @@ test_restart = executable(
   dependencies: [lc_core_dep],
 )
 test('restart', test_restart)
+
+test_autoload = executable(
+  'test-autoload',
+  'test-autoload.c',
+  dependencies: [lc_core_dep],
+)
+test('autoload', test_autoload)
+
+test_winlist = executable(
+  'test-winlist',
+  'test-winlist.c',
+  dependencies: [lc_core_dep],
+)
+test('winlist', test_winlist)

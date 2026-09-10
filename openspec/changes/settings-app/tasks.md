@@ -76,73 +76,73 @@ function that does not split cleanly.
 
 ## Phase 2 — Slice 2: `lc-autoload` pure transforms
 
-- [ ] 2.1 RED: `tests/test-autoload.c` — `lc_autoload_add` on an empty list (module-autoload-toggle "Add to an empty list").
-- [ ] 2.2 RED: same file — `lc_autoload_remove` preserves every other entry, unchanged, in order ("Remove preserves other entries").
-- [ ] 2.3 RED: same file — `lc_autoload_remove` when absent is a no-op ("Remove when absent is a no-op").
-- [ ] 2.4 RED: same file — `lc_autoload_normalize` splits `:`-joined scalars, trims, drops empties; `lc_autoload_join` round-trips; `lc_autoload_is_enabled` is exact-match only (`"ours-extra"` ≠ `"ours"`).
-- [ ] 2.5 GREEN: `src/core/lc-autoload.{c,h}` — `normalize`/`join`/`is_enabled`/`add`/`remove` only. Declare (do not yet define) `LcAutoloadBackend` and `lc_autoload_set_enabled()` for Phase 3.
-- [ ] 2.6 Wire `tests/meson.build`: add the `test-autoload` executable and `test()`.
-- [ ] 2.7 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
+- [x] 2.1 RED: `tests/test-autoload.c` — `lc_autoload_add` on an empty list (module-autoload-toggle "Add to an empty list").
+- [x] 2.2 RED: same file — `lc_autoload_remove` preserves every other entry, unchanged, in order ("Remove preserves other entries").
+- [x] 2.3 RED: same file — `lc_autoload_remove` when absent is a no-op ("Remove when absent is a no-op").
+- [x] 2.4 RED: same file — `lc_autoload_normalize` splits `:`-joined scalars, trims, drops empties; `lc_autoload_join` round-trips; `lc_autoload_is_enabled` is exact-match only (`"ours-extra"` ≠ `"ours"`).
+- [x] 2.5 GREEN: `src/core/lc-autoload.{c,h}` — `normalize`/`join`/`is_enabled`/`add`/`remove` only. Declare (do not yet define) `LcAutoloadBackend` and `lc_autoload_set_enabled()` for Phase 3.
+- [x] 2.6 Wire `tests/meson.build`: add the `test-autoload` executable and `test()`.
+- [x] 2.7 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
 
 ## Phase 3 — Slice 3: `lc-autoload` orchestration and the D1 shape table
 
-- [ ] 3.1 RED: extend `tests/test-autoload.c` — a fake `LcAutoloadBackend` recording every `write` call, its shape, and its list.
-- [ ] 3.2 RED: same — key absent, enable ⇒ key created holding exactly our module ("Key absent, enable").
-- [ ] 3.3 RED: same — scalar holding only ours, enable is idempotent, no duplication ("...enable is idempotent").
-- [ ] 3.4 RED: same — scalar holding a different module, enable preserves it byte-for-byte, no duplicate ("...enable preserves it").
-- [ ] 3.5 RED: same — array with third-party modules, enable preserves them, ours appears exactly once ("...enable preserves them").
-- [ ] 3.6 RED: same — enabling twice returns `LC_AUTOLOAD_NO_CHANGE` and `write` is never called ("Enabling twice is idempotent").
-- [ ] 3.7 RED: same — scalar holding only ours, disable clears the key entirely ("...disable clears it").
-- [ ] 3.8 RED: same — array with third-party modules, disable removes only ours, others byte-for-byte unchanged ("...disable removes only ours").
-- [ ] 3.9 RED: same — disabling when not present is a no-op, `write` never called ("Disabling when we are not present is a no-op").
-- [ ] 3.10 RED: same — `LC_AUTOLOAD_UNSUPPORTED_SHAPE` on an unrecognised `GType`, `write` never called; also: empty array, array with `NULL` elements, `"::"`, whitespace-only element (threat matrix: untrusted `/Gtk/Modules` input).
-- [ ] 3.11 RED: same — `read` returning `FALSE` ⇒ `LC_AUTOLOAD_READ_FAILED`, no write; `write` returning `FALSE` ⇒ `LC_AUTOLOAD_WRITE_FAILED`.
-- [ ] 3.12 GREEN: `src/core/lc-autoload.{c,h}` — `LcAutoloadShape`/`LcAutoloadResult` enums, `LcAutoloadBackend`, `lc_autoload_set_enabled()` implementing D1's full table.
-- [ ] 3.13 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; confirm every D1-table test asserts a third-party entry survives.
+- [x] 3.1 RED: extend `tests/test-autoload.c` — a fake `LcAutoloadBackend` recording every `write` call, its shape, and its list.
+- [x] 3.2 RED: same — key absent, enable ⇒ key created holding exactly our module ("Key absent, enable").
+- [x] 3.3 RED: same — scalar holding only ours, enable is idempotent, no duplication ("...enable is idempotent").
+- [x] 3.4 RED: same — scalar holding a different module, enable preserves it byte-for-byte, no duplicate ("...enable preserves it").
+- [x] 3.5 RED: same — array with third-party modules, enable preserves them, ours appears exactly once ("...enable preserves them").
+- [x] 3.6 RED: same — enabling twice returns `LC_AUTOLOAD_NO_CHANGE` and `write` is never called ("Enabling twice is idempotent").
+- [x] 3.7 RED: same — scalar holding only ours, disable clears the key entirely ("...disable clears it").
+- [x] 3.8 RED: same — array with third-party modules, disable removes only ours, others byte-for-byte unchanged ("...disable removes only ours").
+- [x] 3.9 RED: same — disabling when not present is a no-op, `write` never called ("Disabling when we are not present is a no-op").
+- [x] 3.10 RED: same — `LC_AUTOLOAD_UNSUPPORTED_SHAPE` on an unrecognised `GType`, `write` never called; also: empty array, array with `NULL` elements, `"::"`, whitespace-only element (threat matrix: untrusted `/Gtk/Modules` input).
+- [x] 3.11 RED: same — `read` returning `FALSE` ⇒ `LC_AUTOLOAD_READ_FAILED`, no write; `write` returning `FALSE` ⇒ `LC_AUTOLOAD_WRITE_FAILED`.
+- [x] 3.12 GREEN: `src/core/lc-autoload.{c,h}` — `LcAutoloadShape`/`LcAutoloadResult` enums, `LcAutoloadBackend`, `lc_autoload_set_enabled()` implementing D1's full table.
+- [x] 3.13 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; confirm every D1-table test asserts a third-party entry survives.
 
 ## Phase 4 — Slice 4: Shell and packaging
 
-- [ ] 4.1 Create `src/settings/main.c` — `GtkApplication`, window bootstrap, gettext domain binding.
-- [ ] 4.2 Create `src/settings/lc-autoload-xfconf.c` — the sole `LcAutoloadBackend` implementation against the `xsettings` channel's `/Gtk/Modules` key.
-- [ ] 4.3 Edit `meson.build` — `xfconf_dep = dependency('libxfconf-0')`; `executable('xfce4-window-button-colors-settings', ..., dependencies: [lc_core_dep, gtk3_dep, wnck_dep, xfconf_dep])`; `i18n.merge_file()` for the `.desktop`.
-- [ ] 4.4 Create `data/xfce4-window-button-colors-settings.desktop.in` — `Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;`, `OnlyShowIn=XFCE;`.
-- [ ] 4.5 Edit `debian/control` — add `libxfconf-0-dev` to `Build-Depends` (D6). No `Depends` edit; runtime `libxfconf-0-3` arrives via `${shlibs:Depends}`.
-- [ ] 4.6 Edit `openspec/config.yaml` (line 30 area) — correct `toolchain_present`, dropping the stale `libxfce4panel-2.0-dev`/`libxfce4util-dev` entries `meson.build` does not reference (D6).
-- [ ] 4.7 Verify only, no edit needed — `.github/workflows/ci.yml` (read-only) and `.github/workflows/release.yml` (read-only) already list `libxfconf-0-dev` in their apt install steps.
-- [ ] 4.8 Edit `po/POTFILES.in` — add `src/settings/main.c`, `src/settings/lc-settings-ui.c`, plus a `[type: gettext/desktop]` line for the `.desktop.in`.
-- [ ] 4.9 Bump version to `0.2.0` in `meson.build` (`project()` `version:`) and add a matching new entry to `debian/changelog`, same format as the existing `0.1.0` entry.
-- [ ] 4.10 Verify: `meson test -C build`; `meson compile -C build` builds the new binary; `nm -u build/liblc-core.a` still clean — only `src/settings/` links xfconf/gtk/wnck.
+- [x] 4.1 Create `src/settings/main.c` — `GtkApplication`, window bootstrap, gettext domain binding.
+- [x] 4.2 Create `src/settings/lc-autoload-xfconf.c` — the sole `LcAutoloadBackend` implementation against the `xsettings` channel's `/Gtk/Modules` key.
+- [x] 4.3 Edit `meson.build` — `xfconf_dep = dependency('libxfconf-0')`; `executable('xfce4-window-button-colors-settings', ..., dependencies: [lc_core_dep, gtk3_dep, wnck_dep, xfconf_dep])`; `i18n.merge_file()` for the `.desktop`.
+- [x] 4.4 Create `data/xfce4-window-button-colors-settings.desktop.in` — `Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;`, `OnlyShowIn=XFCE;`.
+- [x] 4.5 Edit `debian/control` — add `libxfconf-0-dev` to `Build-Depends` (D6). No `Depends` edit; runtime `libxfconf-0-3` arrives via `${shlibs:Depends}`.
+- [x] 4.6 Edit `openspec/config.yaml` (line 30 area) — correct `toolchain_present`, dropping the stale `libxfce4panel-2.0-dev`/`libxfce4util-dev` entries `meson.build` does not reference (D6).
+- [x] 4.7 Verify only, no edit needed — `.github/workflows/ci.yml` (read-only) and `.github/workflows/release.yml` (read-only) already list `libxfconf-0-dev` in their apt install steps.
+- [x] 4.8 Edit `po/POTFILES.in` — add `src/settings/main.c`, `src/settings/lc-settings-ui.c`, plus a `[type: gettext/desktop]` line for the `.desktop.in`.
+- [x] 4.9 Bump version to `0.2.0` in `meson.build` (`project()` `version:`) and add a matching new entry to `debian/changelog`, same format as the existing `0.1.0` entry.
+- [x] 4.10 Verify: `meson test -C build`; `meson compile -C build` builds the new binary; `nm -u build/liblc-core.a` still clean — only `src/settings/` links xfconf/gtk/wnck.
 
 ## Phase 5 — Slice 5: Toggle and restart UI
 
-- [ ] 5.1 Create `src/settings/lc-settings-ui.{c,h}` — toggle row bound to `lc_autoload_is_enabled()`/`lc_autoload_set_enabled()` via the xfconf backend (D1).
-- [ ] 5.2 Wire `XfconfChannel::property-changed` on `xsettings`, filtered to `/Gtk/Modules`, handler blocked while reflecting external state (D5) ("Toggle completes without restarting").
-- [ ] 5.3 Add the "Restart panel" action: confirmation dialog naming the `README.md:113` TTY recovery, `g_spawn_async()` with `lc_restart_panel_argv()`, `G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD` (D4) ("Restart is cancellable", "Confirmed restart applies the change").
-- [ ] 5.4 Add non-modal error surfacing on spawn failure: the `GError` message plus the literal command in a selectable label, no automatic retry (D4).
-- [ ] 5.5 Add the session-local "configuration changed since this window opened" hint; the restart action itself stays enabled regardless (D5).
+- [x] 5.1 Create `src/settings/lc-settings-ui.{c,h}` — toggle row bound to `lc_autoload_is_enabled()`/`lc_autoload_set_enabled()` via the xfconf backend (D1).
+- [x] 5.2 Wire `XfconfChannel::property-changed` on `xsettings`, filtered to `/Gtk/Modules`, handler blocked while reflecting external state (D5) ("Toggle completes without restarting").
+- [x] 5.3 Add the "Restart panel" action: confirmation dialog naming the `README.md:113` TTY recovery, `g_spawn_async()` with `lc_restart_panel_argv()`, `G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD` (D4) ("Restart is cancellable", "Confirmed restart applies the change").
+- [x] 5.4 Add non-modal error surfacing on spawn failure: the `GError` message plus the literal command in a selectable label, no automatic retry (D4).
+- [x] 5.5 Add the session-local "configuration changed since this window opened" hint; the restart action itself stays enabled regardless (D5).
 
 ## Phase 6 — Slice 6: `lc-winlist` pure core (new — closes a spec/design gap)
 
-- [ ] 6.1 RED: `tests/test-winlist.c` — given stored XIDs and a synthetic (non-wnck) snapshot of `{xid, title}` pairs with `snapshot_ok == TRUE`, the built row list contains exactly the live entries with their current titles and none for a closed window (stored-color-management "Orphaned entry never appears as a row", "Row shows the current title").
-- [ ] 6.2 RED: same — `snapshot_ok == FALSE` (unobtainable or obtained-empty) ⇒ no entry is marked orphaned and none is presented as live; the result signals an "unavailable" state, never an empty list (stored-color-management "List never marks entries as orphaned under an ambiguous snapshot").
-- [ ] 6.3 GREEN: `src/core/lc-winlist.{c,h}` — pure join of `lc_winstore_xids()` output against a caller-supplied snapshot struct, reusing `lc_winstore_reconcile()`'s `snapshot_ok` semantics; no wnck symbol.
-- [ ] 6.4 Wire `tests/meson.build`: add the `test-winlist` executable and `test()`, `lc_core_dep` only.
-- [ ] 6.5 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
+- [x] 6.1 RED: `tests/test-winlist.c` — given stored XIDs and a synthetic (non-wnck) snapshot of `{xid, title}` pairs with `snapshot_ok == TRUE`, the built row list contains exactly the live entries with their current titles and none for a closed window (stored-color-management "Orphaned entry never appears as a row", "Row shows the current title").
+- [x] 6.2 RED: same — `snapshot_ok == FALSE` (unobtainable or obtained-empty) ⇒ no entry is marked orphaned and none is presented as live; the result signals an "unavailable" state, never an empty list (stored-color-management "List never marks entries as orphaned under an ambiguous snapshot").
+- [x] 6.3 GREEN: `src/core/lc-winlist.{c,h}` — pure join of `lc_winstore_xids()` output against a caller-supplied snapshot struct, reusing `lc_winstore_reconcile()`'s `snapshot_ok` semantics; no wnck symbol.
+- [x] 6.4 Wire `tests/meson.build`: add the `test-winlist` executable and `test()`, `lc_core_dep` only.
+- [x] 6.5 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
 
 ## Phase 7 — Slice 7: `lc-winlist` glue and the colour-list UI
 
-- [ ] 7.1 Create `src/settings/lc-winlist.{c,h}` — `GtkWidget::map`-gated `wnck_screen_force_update()`, self-XID completeness probe (D2), `snapshot_ok` determination, calling into `src/core/lc-winlist.c`'s pure join (D3).
-- [ ] 7.2 Extend `src/settings/lc-settings-ui.c` — colour-list rows, single-entry removal (`lc_winstore_unset()` + `lc_winstore_save()`), bulk orphan cleanup calling `lc_winstore_reconcile()` unchanged with save-iff-dropped-greater-than-zero (stored-color-management "Removing one entry leaves the rest intact", "Cleanup removes only confirmed orphans", "Cleanup is idempotent on a stable, valid snapshot").
-- [ ] 7.3 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; `src/glue/module.c` (read-only) shows zero changes (settings-app-shell "module.c Untouched").
+- [x] 7.1 Create `src/settings/lc-winlist-wnck.{c,h}` — `GtkWidget::map`-gated `wnck_screen_force_update()`, self-XID completeness probe (D2), `snapshot_ok` determination, calling into `src/core/lc-winlist.c`'s pure join (D3). (Named `lc-winlist-wnck.{c,h}`, not the literal `lc-winlist.{c,h}` this line names, to match design.md's own File Changes table and the filename slice 6's `lc-winlist.h` header comment already cites for this exact file — see the apply report's Deviations section.)
+- [x] 7.2 Extend `src/settings/lc-settings-ui.c` — colour-list rows, single-entry removal (`lc_winstore_unset()` + `lc_winstore_save()`), bulk orphan cleanup calling `lc_winstore_reconcile()` unchanged with save-iff-dropped-greater-than-zero (stored-color-management "Removing one entry leaves the rest intact", "Cleanup removes only confirmed orphans", "Cleanup is idempotent on a stable, valid snapshot").
+- [x] 7.3 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean; `src/glue/module.c` (read-only) shows zero changes (settings-app-shell "module.c Untouched").
 
 ## Phase 8 — Slice 8: i18n and docs
 
-- [ ] 8.1 Mark every new user-facing string (toggle label, restart confirm/error dialogs, colour-list labels, cleanup report) for gettext extraction; regenerate `po/xfce4-window-button-colors.pot`.
-- [ ] 8.2 Add the new `msgid` entries to `po/es.po`.
-- [ ] 8.3 Edit `README.md` — make the settings application the primary activation route; demote the `xfconf-query`/`xfce4-panel -r` commands (`README.md:20-24`) to an alternative section.
-- [ ] 8.4 Fix `README.md:72` — the documented `xfconf-query -c xsettings -p /Gtk/Modules -r` reset command deletes a third-party module's autoload when the key lists others (D1); replace it with the settings app's disable action as the ordinary path. `README.md:113`'s identical command stays unchanged there — that one is the correct TTY recovery instruction.
-- [ ] 8.5 Create `docs/manual-verification.md` — consolidate the manual scenarios from Phases 4, 5, 7 and settings-app-shell's manual scenarios (launch while disabled/enabled, Settings Manager entry visible, lintian-clean) into one live checklist.
-- [ ] 8.6 Verify: `meson test -C build` including the `es_ES.UTF-8` re-run; `msgfmt --statistics` shows no missing entries in `es.po` against the `.pot`; `dpkg-buildpackage -us -uc -b && lintian` clean.
+- [x] 8.1 Mark every new user-facing string (toggle label, restart confirm/error dialogs, colour-list labels, cleanup report) for gettext extraction; regenerate `po/xfce4-window-button-colors.pot`. (All strings were already `_()`-wrapped from Phases 4/5/7; the actual gap was `po/POTFILES.in`'s `[type: gettext/desktop]` line, which is an intltool convention this system's `xgettext` 0.21 does not understand for its `-f` listfile — it auto-detects `.desktop.in` as the `Desktop` language from the filename alone. Fixed to a plain path; see Issues Found.)
+- [x] 8.2 Add the new `msgid` entries to `po/es.po`.
+- [x] 8.3 Edit `README.md` — make the settings application the primary activation route; demote the `xfconf-query`/`xfce4-panel -r` commands (`README.md:20-24`) to an alternative section.
+- [x] 8.4 Fix `README.md:72` — the documented `xfconf-query -c xsettings -p /Gtk/Modules -r` reset command deletes a third-party module's autoload when the key lists others (D1); replace it with the settings app's disable action as the ordinary path. `README.md:113`'s identical command stays unchanged there — that one is the correct TTY recovery instruction.
+- [x] 8.5 Create `docs/manual-verification.md` — consolidate the manual scenarios from Phases 4, 5, 7 and settings-app-shell's manual scenarios (launch while disabled/enabled, Settings Manager entry visible, lintian-clean) into one live checklist.
+- [x] 8.6 Verify: `meson test -C build` including the `es_ES.UTF-8` re-run; `msgfmt --statistics` shows no missing entries in `es.po` against the `.pot`; `dpkg-buildpackage -us -uc -b && lintian` clean.
 
 ## Key Learnings
 
