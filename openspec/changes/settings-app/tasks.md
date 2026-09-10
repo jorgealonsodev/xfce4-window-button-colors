@@ -123,11 +123,11 @@ function that does not split cleanly.
 
 ## Phase 6 — Slice 6: `lc-winlist` pure core (new — closes a spec/design gap)
 
-- [ ] 6.1 RED: `tests/test-winlist.c` — given stored XIDs and a synthetic (non-wnck) snapshot of `{xid, title}` pairs with `snapshot_ok == TRUE`, the built row list contains exactly the live entries with their current titles and none for a closed window (stored-color-management "Orphaned entry never appears as a row", "Row shows the current title").
-- [ ] 6.2 RED: same — `snapshot_ok == FALSE` (unobtainable or obtained-empty) ⇒ no entry is marked orphaned and none is presented as live; the result signals an "unavailable" state, never an empty list (stored-color-management "List never marks entries as orphaned under an ambiguous snapshot").
-- [ ] 6.3 GREEN: `src/core/lc-winlist.{c,h}` — pure join of `lc_winstore_xids()` output against a caller-supplied snapshot struct, reusing `lc_winstore_reconcile()`'s `snapshot_ok` semantics; no wnck symbol.
-- [ ] 6.4 Wire `tests/meson.build`: add the `test-winlist` executable and `test()`, `lc_core_dep` only.
-- [ ] 6.5 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
+- [x] 6.1 RED: `tests/test-winlist.c` — given stored XIDs and a synthetic (non-wnck) snapshot of `{xid, title}` pairs with `snapshot_ok == TRUE`, the built row list contains exactly the live entries with their current titles and none for a closed window (stored-color-management "Orphaned entry never appears as a row", "Row shows the current title").
+- [x] 6.2 RED: same — `snapshot_ok == FALSE` (unobtainable or obtained-empty) ⇒ no entry is marked orphaned and none is presented as live; the result signals an "unavailable" state, never an empty list (stored-color-management "List never marks entries as orphaned under an ambiguous snapshot").
+- [x] 6.3 GREEN: `src/core/lc-winlist.{c,h}` — pure join of `lc_winstore_xids()` output against a caller-supplied snapshot struct, reusing `lc_winstore_reconcile()`'s `snapshot_ok` semantics; no wnck symbol.
+- [x] 6.4 Wire `tests/meson.build`: add the `test-winlist` executable and `test()`, `lc_core_dep` only.
+- [x] 6.5 Verify: `meson test -C build`; `nm -u build/liblc-core.a` still clean.
 
 ## Phase 7 — Slice 7: `lc-winlist` glue and the colour-list UI
 
